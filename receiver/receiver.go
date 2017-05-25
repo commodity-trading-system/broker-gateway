@@ -37,11 +37,11 @@ func NewReceiver(config ReceiverConfig) *Receiver {
 func (r*Receiver) OnCreate(sessionID quickfix.SessionID)()  { return }
 func (r*Receiver) OnLogon(sessionID quickfix.SessionID)()  { return }
 func (r*Receiver) OnLogout(sessionID quickfix.SessionID)()  { return }
-func (r*Receiver) ToAdmin(message quickfix.Message, sessionID quickfix.SessionID)()  { return}
-func (r*Receiver) ToApp(message quickfix.Message, sessionID quickfix.SessionID) error { return nil}
-func (r*Receiver) FromAdmin(message quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError { return nil }
+func (r*Receiver) ToAdmin(message *quickfix.Message, sessionID quickfix.SessionID)()  { return}
+func (r*Receiver) ToApp(message *quickfix.Message, sessionID quickfix.SessionID) error { return nil}
+func (r*Receiver) FromAdmin(message *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError { return nil }
 
-func (r*Receiver) FromApp(msg quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError  {
+func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError  {
 	var futureId quickfix.FIXString
 	var direction quickfix.FIXInt
 	var firmId quickfix.FIXInt

@@ -13,8 +13,8 @@ const (
 type OrderDirection string
 
 const (
-	OrderDirection_SELL    OrderDirection = "0"
-	OrderDirection_BUY     OrderDirection = "1"
+	OrderDirection_SELL    = 0
+	OrderDirection_BUY     = 1
 )
 
 type TagNum int

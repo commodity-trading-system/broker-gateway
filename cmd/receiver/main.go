@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"log"
+	"strconv"
 )
 
 func main()  {
@@ -15,11 +16,13 @@ func main()  {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	port,_ := strconv.ParseInt(env["REDIS_PORT"],10,32)
+	db,_ := strconv.ParseInt(env["REDIS_DB"],10,32)
 	config := receiver.ReceiverConfig{
 		RedisHost: env["REDIS_HOST"],
-		RedisPort: env["REDIS_PORT"],
+		RedisPort: int(port),
 		RedisPwd: env["REDIS_PASSWORD"],
-		RedisDB: env["REDIS_DB"],
+		RedisDB: int(db),
 	}
 
 	app := receiver.NewReceiver(config)
