@@ -9,6 +9,36 @@
 			"revisionTime": "2017-05-11T14:02:26Z"
 		},
 		{
+			"checksumSHA1": "XUqPA2V7/z8JyWnCPclCztcXO7M=",
+			"path": "github.com/go-redis/redis/internal",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
+			"checksumSHA1": "GQZsUVg/+6UpQAYpc4luMvMutSI=",
+			"path": "github.com/go-redis/redis/internal/consistenthash",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
+			"checksumSHA1": "VP0K8vvf716n6xuzAZTvpz+wTwc=",
+			"path": "github.com/go-redis/redis/internal/hashtag",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
+			"checksumSHA1": "jqWbW7HClGFK4zjaW96RWdRElZk=",
+			"path": "github.com/go-redis/redis/internal/pool",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
+			"checksumSHA1": "lEtS56d84Jw7raXpyu/XkIpTLLU=",
+			"path": "github.com/go-redis/redis/internal/proto",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
 			"checksumSHA1": "qzl/TNo4WnfR+PZRfk3iFHg68sM=",
 			"path": "github.com/joho/godotenv",
 			"revision": "325433c502d409f3c3dc820098fb0cfe38d98dc7",
