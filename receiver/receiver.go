@@ -3,14 +3,15 @@ package receiver
 import (
 	"github.com/quickfixgo/quickfix"
 	"github.com/go-redis/redis"
-	"github.com/quickfixgo/quickfix/fix44/newordersingle"
-	"github.com/quickfixgo/quickfix/enum"
+	//"github.com/quickfixgo/quickfix/fix44/newordersingle"
+	//"github.com/quickfixgo/quickfix/enum"
 	"github.com/quickfixgo/quickfix/tag"
 	"broker-gateway/entities"
+	"broker-gateway/enum"
 )
 
 type Receiver struct {
-	redisClient redis.Client
+	redisClient *redis.Client
 	*quickfix.MessageRouter
 }
 
@@ -24,13 +25,12 @@ type ReceiverConfig struct {
 func NewReceiver(config ReceiverConfig) *Receiver {
 	r := &Receiver{
 		redisClient: redis.NewClient(&redis.Options{
-			Addr:     config.RedisHost+":"+config.RedisPort,
+			Addr:     config.RedisHost+":"+string(config.RedisPort),
 			Password: config.RedisPwd,
 			DB:       config.RedisDB,
 		}),
 		MessageRouter: quickfix.NewMessageRouter(),
 	}
-	r.AddRoute(newordersingle.Route(r.OnNewOrderSingle))
 	return r
 }
 
@@ -41,48 +41,65 @@ func (r*Receiver) ToAdmin(message quickfix.Message, sessionID quickfix.SessionID
 func (r*Receiver) ToApp(message quickfix.Message, sessionID quickfix.SessionID) error { return nil}
 func (r*Receiver) FromAdmin(message quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError { return nil }
 
-func (r*Receiver) FromApp(message quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError  {
-	return r.Route(message, sessionID)
-}
+func (r*Receiver) FromApp(msg quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError  {
+	var futureId quickfix.FIXString
+	var direction quickfix.FIXInt
+	var firmId quickfix.FIXInt
+	var quantity quickfix.FIXInt
+	var price quickfix.FIXDecimal
+	var orderType quickfix.FIXInt
+	var err quickfix.MessageRejectError
 
-func (r*Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, session quickfix.SessionID)  quickfix.MessageRejectError {
-	var futureId quickfix.FIXInt
-
-	// Tag40
-	ordType, err := msg.GetOrdType()
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_FUTUREID),&futureId)
 	if err != nil {
 		return err
 	}
 
-	if ordType != enum.OrdType_LIMIT &&
-		ordType != enum.OrdType_MARKET &&
-		ordType != enum.OrdType_STOP &&
-		ordType != enum.OrdType_STOP_LIMIT {
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_DIRECTION),&direction)
+	if err != nil {
+		return err
+	}
+
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_FIRMID),&firmId)
+	if err != nil {
+		return err
+	}
+
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_PRICE),&price)
+	if err != nil {
+		return err
+	}
+
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_QUANTITY),&quantity)
+	if err != nil {
+		return err
+	}
+
+	err = msg.Body.GetField(quickfix.Tag(enum.TagNum_OrdType),&orderType)
+	if err != nil {
+		return err
+	}
+
+
+	if orderType.Int() != enum.OrdType_CANCEL &&
+		orderType.Int() != enum.OrdType_MARKET &&
+		orderType.Int() != enum.OrdType_STOP &&
+		orderType.Int() != enum.OrdType_LIMIT {
 		return quickfix.ValueIsIncorrect(tag.OrdType)
 	}
 
-	// Tag 38
-	orderQty, err := msg.GetOrderQty()
-	if err != nil {
-		return err
-	}
-
-	// Tag 44
-	price, err := msg.GetPrice()
-	if err != nil {
-		return err
-	}
-
-	err = msg.GetField(quickfix.Tag(40),&futureId)
-	if err != nil {
-		return err
-	}
 
 	order := entities.Consignation{
-		Price: price,
-		Quantity: orderQty,
+		Price: price.Decimal,
+		Quantity: quantity.Int(),
+		Direction: direction.Int(),
+		FirmId: firmId.Int(),
 	}
 
-	r.redisClient.RPush("future_"+futureId, order)
+	r.redisClient.RPush("future_"+futureId.String(), order)
 	return nil
 }
+
+//func (r*Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, session quickfix.SessionID)  quickfix.MessageRejectError {
+//
+//}

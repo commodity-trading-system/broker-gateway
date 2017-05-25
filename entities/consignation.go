@@ -6,8 +6,10 @@ import (
 
 type Consignation struct {
 	Type int
-	Quantity uint32
-	FutureId uint32
+	Quantity int
+	FutureId int
 	Price decimal.Decimal
-	OpenQuantity uint32
+	OpenQuantity int
+	Direction int
+	FirmId int
 }
