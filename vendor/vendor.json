@@ -1,0 +1,37 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "wcOb7Q8yWPMxvX2cZ3IhaWT8mQk=",
+			"path": "github.com/go-redis/redis",
+			"revision": "18c1db946601fba100ad23e98eb8c04055a2a6cd",
+			"revisionTime": "2017-05-11T14:02:26Z"
+		},
+		{
+			"checksumSHA1": "qzl/TNo4WnfR+PZRfk3iFHg68sM=",
+			"path": "github.com/joho/godotenv",
+			"revision": "325433c502d409f3c3dc820098fb0cfe38d98dc7",
+			"revisionTime": "2017-03-28T20:01:54Z"
+		},
+		{
+			"checksumSHA1": "+05lmif9N1b+3IEJ3zzbfjW4RCI=",
+			"path": "github.com/kardianos/govendor",
+			"revision": "c86c10d612bf08e847456ce91d495eb69ad87087",
+			"revisionTime": "2017-05-06T05:20:04Z"
+		},
+		{
+			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
+			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
+			"checksumSHA1": "08bAXkMbdBFQ+mKn2kQ7F6YTUek=",
+			"path": "github.com/shopspring/decimal",
+			"revision": "16a941821474ee3986fdbeab535a68a8aa5a85d2",
+			"revisionTime": "2017-05-17T22:01:17Z"
+		}
+	],
+	"rootPath": "broker-gateway"
+}
