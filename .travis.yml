@@ -8,5 +8,6 @@ install:
   - go get github.com/go-redis/redis
   - go get github.com/joho/godotenv
   - go get github.com/shopspring/decimal
+  - go get github.com/commodity-trading-system/broker-gateway
 
 script: go test ./...
