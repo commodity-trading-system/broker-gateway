@@ -33,5 +33,8 @@ func TestReceiver_FromApp(t *testing.T) {
 	msg.Body.SetString(quickfix.Tag(enum.TagNum_PRICE), "12.00")
 	msg.Body.SetInt(quickfix.Tag(enum.TagNum_OrdType), enum.OrdType_LIMIT)
 	session := quickfix.SessionID{}
-	receiver.FromApp(msg, session)
+	err := receiver.FromApp(msg, session)
+	if err != nil {
+		t.Error(err)
+	}
 }

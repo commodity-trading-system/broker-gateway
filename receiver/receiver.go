@@ -8,6 +8,7 @@ import (
 	"github.com/quickfixgo/quickfix/tag"
 	"broker-gateway/entities"
 	"broker-gateway/enum"
+	"fmt"
 )
 
 type Receiver struct {
@@ -96,7 +97,12 @@ func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) q
 		FirmId: firmId.Int(),
 	}
 
-	r.redisClient.RPush("future_"+futureId.String(), order)
+
+	intCmd := r.redisClient.RPush("future_"+futureId.String(), order)
+	if intCmd.Err() != nil {
+		return quickfix.NewMessageRejectError(intCmd.String(),0,nil)
+	}
+	fmt.Println(intCmd.Err())
 	return nil
 }
 
