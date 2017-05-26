@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.7.x
+  - master
+
+install:
+  - go get github.com/go-redis/redis
+  - go get github.com/joho/godotenv
+  - go get github.com/shopspring/decimal
+
+script: go test ./...
