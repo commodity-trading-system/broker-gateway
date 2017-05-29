@@ -28,30 +28,30 @@ func (h *Heap) Pop() interface{} {
 	return x
 }
 
-type BuyHeap struct {
+type MaxHeap struct {
 	Heap
 }
 
-func (h *BuyHeap) Less(i, j int) bool {
+func (h *MaxHeap) Less(i, j int) bool {
 	return h.Heap[i].Price.Cmp(h.Heap[j].Price)< 0
 }
 
-type SellHeap struct {
+type MinHeap struct {
 	Heap
 }
 
-func (h *SellHeap) Less(i, j int) bool {
+func (h *MinHeap) Less(i, j int) bool {
 	return h.Heap[i].Price.Cmp(h.Heap[j].Price)> 0
 }
 
-func NewBuyHeap(direction int) *BuyHeap {
-	return &BuyHeap{
+func NewMaxHeap(direction int) *MaxHeap {
+	return &MaxHeap{
 		Heap{},
 	}
 }
 
-func NewSellHeap(direction int) *SellHeap {
-	return &SellHeap{
+func NewMinHeap(direction int) *MinHeap {
+	return &MinHeap{
 		Heap{},
 	}
 }
