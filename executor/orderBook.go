@@ -8,10 +8,13 @@ import (
 )
 
 type OrderBook struct {
+	// db
+	db *DB
+
 	// For stop order
-	triggerPoint map[decimal.Decimal][]*entities.Consignation
-	triggerBuyPoint MinHeap
-	triggerSellPoint MaxHeap
+	//triggerPoint map[decimal.Decimal][]*entities.Consignation
+	triggerBuyPoint *MinHeap
+	triggerSellPoint *MaxHeap
 
 	topSell decimal.Decimal
 	topBuy decimal.Decimal
@@ -19,14 +22,31 @@ type OrderBook struct {
 	totalBuy uint
 	totalSell uint
 	// Limit order book
-	buyBook MaxHeap
-	sellBook MinHeap
+	buyBook *MaxHeap
+	sellBook *MinHeap
 
 	//buyBook map[decimal.Decimal][]*entities.Consignation
 	//sellBook map[decimal.Decimal][]*entities.Consignation
 	// Market order book
 	marketBuyBook []*entities.Consignation
 	marketSellBook []*entities.Consignation
+}
+
+func NewOrderBook(d *DB) *OrderBook  {
+	return &OrderBook{
+		db:d,
+		buyBook: NewMaxHeap(),
+		sellBook: NewMinHeap(),
+		triggerBuyPoint: NewMinHeap(),
+		triggerSellPoint: NewMaxHeap(),
+		marketBuyBook: make([]*entities.Consignation,0,5),
+		marketSellBook: make([]*entities.Consignation,0,5),
+		topBuy: decimal.Zero,
+		topSell: decimal.Zero,
+		lastPrice: decimal.Zero,
+		totalBuy: 0,
+		totalSell: 0,
+	}
 }
 
 // At most one consignation will cause matching
@@ -183,7 +203,7 @@ func (book *OrderBook) addLimit(consignation *entities.Consignation)  {
 			return
 		}
 
-		book.matchLimit(consignation,&book.sellBook)
+		book.matchLimit(consignation,book.sellBook)
 
 
 		if consignation.OpenQuantity > 0 {
@@ -204,7 +224,7 @@ func (book *OrderBook) addLimit(consignation *entities.Consignation)  {
 			return
 		}
 
-		book.matchLimit(consignation,&book.buyBook)
+		book.matchLimit(consignation,book.buyBook)
 
 		if consignation.OpenQuantity > 0 {
 			heap.Push(book.sellBook, Level{
