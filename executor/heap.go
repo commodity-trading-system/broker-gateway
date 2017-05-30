@@ -66,13 +66,13 @@ func (h *MinHeap) Less(i, j int) bool {
 	return h.Heap[i].Price.Cmp(h.Heap[j].Price)> 0
 }
 
-func NewMaxHeap(direction int) *MaxHeap {
+func NewMaxHeap() *MaxHeap {
 	return &MaxHeap{
 		Heap{},
 	}
 }
 
-func NewMinHeap(direction int) *MinHeap {
+func NewMinHeap() *MinHeap {
 	return &MinHeap{
 		Heap{},
 	}
