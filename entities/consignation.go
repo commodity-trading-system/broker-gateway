@@ -3,9 +3,11 @@ package entities
 import (
 	"github.com/shopspring/decimal"
 	"strconv"
+	"github.com/jinzhu/gorm"
 )
 
 type Consignation struct {
+	gorm.Model
 	Type int
 	Quantity int
 	FutureId int
@@ -13,6 +15,9 @@ type Consignation struct {
 	OpenQuantity int
 	Direction int
 	FirmId int
+
+	// Relations
+	Orders []Order
 }
 
 func (c Consignation) MarshalBinary() (data []byte, err error) {
