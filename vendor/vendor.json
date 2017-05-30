@@ -39,6 +39,12 @@
 			"revisionTime": "2017-05-11T14:02:26Z"
 		},
 		{
+			"checksumSHA1": "42vkdsxNaLyPu+FktCzZ/8zsNSE=",
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": "9dee4ca50b83acdf57a35fb9e6fb4be640afa2f3",
+			"revisionTime": "2017-03-27T11:30:21Z"
+		},
+		{
 			"checksumSHA1": "qzl/TNo4WnfR+PZRfk3iFHg68sM=",
 			"path": "github.com/joho/godotenv",
 			"revision": "325433c502d409f3c3dc820098fb0cfe38d98dc7",
