@@ -45,6 +45,12 @@
 			"revisionTime": "2017-03-27T11:30:21Z"
 		},
 		{
+			"checksumSHA1": "hA3pKaCPscFk4oqNUPUTYJrm14w=",
+			"path": "github.com/jinzhu/gorm",
+			"revision": "9acaa33324bbcc78239a1c913d4f1292c12177b9",
+			"revisionTime": "2017-05-04T14:08:37Z"
+		},
+		{
 			"checksumSHA1": "qzl/TNo4WnfR+PZRfk3iFHg68sM=",
 			"path": "github.com/joho/godotenv",
 			"revision": "325433c502d409f3c3dc820098fb0cfe38d98dc7",
