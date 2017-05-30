@@ -28,4 +28,11 @@ const (
 	TagNum_OrdType		TagNum = 16
 )
 
+const (
+	ConsignationStatus_CANCELLED = 0
+	ConsignationStatus_APPENDING = 1
+	ConsignationStatus_PARTIAL = 2
+	ConsignationStatus_FINISHED = 3
+)
+
 
