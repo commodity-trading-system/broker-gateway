@@ -3,6 +3,7 @@ package executor
 import (
 	"github.com/shopspring/decimal"
 	"broker-gateway/entities"
+	"container/heap"
 )
 
 type Level struct {
@@ -11,6 +12,10 @@ type Level struct {
 }
 
 type Heap []Level
+
+type HeapInterface interface {
+	Top() *Level
+}
 
 func (h Heap) Len() int { return len(h) }
 func (h Heap) Less(i, j int) bool { return h[i].Price.Cmp(h[j].Price)< 0 }
