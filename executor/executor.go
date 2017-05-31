@@ -12,7 +12,7 @@ import (
 type Executor struct {
 	redisClient *redis.Client
 	*quickfix.MessageRouter
-	orderBooks map[string] *OrderBook
+	orderBooks map[string] OrderBook
 }
 
 type ExecutorConfig struct {
@@ -41,7 +41,7 @@ func NewExecutor(config ExecutorConfig) (*Executor,error) {
 		return nil, err
 	}
 
-	obs := make(map[string] *OrderBook,len(config.Futures))
+	obs := make(map[string] OrderBook,len(config.Futures))
 	for i:= 0; i< len(config.Futures) ;i++  {
 		obs[config.Futures[i]] = NewOrderBook(db)
 	}

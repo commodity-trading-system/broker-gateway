@@ -8,7 +8,7 @@ import (
 )
 
 type Consignation struct {
-	ID uuid.UUID	`gorm:"type:varchar(255);unique_index"`
+	ID uuid.UUID	`gorm:"primary_key;type:varchar(255);unique_index"`
 	Type int
 	Quantity int
 	FutureId int

@@ -3,6 +3,7 @@ package executor
 import (
 	"github.com/shopspring/decimal"
 	"broker-gateway/entities"
+	"container/heap"
 )
 
 type Level struct {
@@ -13,6 +14,7 @@ type Level struct {
 type Heap []Level
 
 type HeapInterface interface {
+	heap.Interface
 	Top() *Level
 }
 

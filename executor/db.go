@@ -17,6 +17,8 @@ type DB interface {
 
 	Query() *gorm.DB
 
+	Empty()
+
 }
 
 type DBConfig struct {
@@ -66,4 +68,11 @@ func (d *db) Save(model interface{})  {
 
 func (d *db) Update(model interface{}, attrs map[string]string) *gorm.DB {
 	return d.client.Model(model).Update(attrs)
+}
+
+func (d *db) Empty() {
+	tables := []string{"futures","firms","orders","consignations"}
+	for i:=0; i<len(tables); i++ {
+		d.client.DropTable(tables[i])
+	}
 }

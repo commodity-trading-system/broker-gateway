@@ -8,7 +8,7 @@ import (
 )
 
 type Order struct {
-	ID uuid.UUID	`gorm:"type:varchar(255);unique_index"`
+	ID uuid.UUID	`gorm:"primary_key;type:varchar(255);unique_index"`
 	Quantity int
 	Price decimal.Decimal  `gorm:"type:decimal(10,2)"`
 	BuyerId int
@@ -28,5 +28,6 @@ type Order struct {
 
 
 func (order *Order) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("id", uuid.NewV1().String())
 	return nil
 }
