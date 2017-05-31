@@ -45,6 +45,32 @@ func TestDb_Create(t *testing.T) {
 		Quantity:10,
 		FutureId: 1,
 	}
-	fmt.Println(order)
 	d.Create(&order)
+}
+
+func TestDb_Query(t *testing.T) {
+	order := newOrder()
+	newOrder := entities.Order{}
+	d.Create(&order)
+	d.Query().Where(map[string]interface{}{
+		"id" : order.ID,
+	}).Find(&newOrder)
+	if newOrder.ID != order.ID {
+		t.Error("query error")
+	}
+	//fmt.Println(newOrder)
+	//fmt.Println(res.(entities.Order))
+}
+
+func newOrder() entities.Order  {
+	return entities.Order{
+		Price: decimal.New(2300,-2),
+		BuyerId: 1,
+		SellerId: 1,
+		ID: uuid.NewV1(),
+		BuyerConsignationId: uuid.NewV1(),
+		SellerConsignationId: uuid.NewV1(),
+		Quantity:10,
+		FutureId: 1,
+	}
 }
