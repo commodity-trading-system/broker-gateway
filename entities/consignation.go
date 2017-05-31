@@ -3,21 +3,27 @@ package entities
 import (
 	"github.com/shopspring/decimal"
 	"strconv"
-	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
+	"time"
 )
 
 type Consignation struct {
-	gorm.Model
+	ID uuid.UUID	`gorm:"type:varchar(255);unique_index"`
 	Type int
 	Quantity int
 	FutureId int
-	Price decimal.Decimal
+	Price decimal.Decimal	`gorm:"type:decimal(10,2)"`
 	OpenQuantity int
 	Direction int
 	FirmId int
 
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
+
+
 	// Relations
-	Orders []Order
+	Orders []Order	`gorm:"-"`
 }
 
 func (c Consignation) MarshalBinary() (data []byte, err error) {
