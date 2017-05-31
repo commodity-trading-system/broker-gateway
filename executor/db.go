@@ -37,7 +37,7 @@ func NewDB(config DBConfig) (DB, error)  {
 		config.Password + "@tcp(" +
 		config.Host + ":" +
 		strconv.Itoa(config.Port) + ")/"+
-		config.DBName+"?charset=utf8")
+		config.DBName+"?charset=utf8&parseTime=true")
 
 	if err != nil {
 		return nil, err
