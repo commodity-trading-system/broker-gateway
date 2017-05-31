@@ -16,6 +16,7 @@ type Consignation struct {
 	OpenQuantity int
 	Direction int
 	FirmId int
+	Status int
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

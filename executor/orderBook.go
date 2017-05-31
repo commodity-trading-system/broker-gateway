@@ -12,7 +12,6 @@ type OrderBook struct {
 	db DB
 
 	// For stop order
-	//triggerPoint map[decimal.Decimal][]*entities.Consignation
 	triggerBuyPoint *MinHeap
 	triggerSellPoint *MaxHeap
 
@@ -21,12 +20,12 @@ type OrderBook struct {
 	lastPrice decimal.Decimal
 	totalBuy uint
 	totalSell uint
+
+
 	// Limit order book
 	buyBook *MaxHeap
 	sellBook *MinHeap
 
-	//buyBook map[decimal.Decimal][]*entities.Consignation
-	//sellBook map[decimal.Decimal][]*entities.Consignation
 	// Market order book
 	marketBuyBook []*entities.Consignation
 	marketSellBook []*entities.Consignation
@@ -69,6 +68,8 @@ func (book *OrderBook) matchLimit(consignation *entities.Consignation, p HeapInt
 		}
 	}
 
+	book.updateTopBuyAndSell()
+
 	return consignation.OpenQuantity == 0
 }
 
@@ -79,21 +80,64 @@ func (book *OrderBook) matchLimit(consignation *entities.Consignation, p HeapInt
  */
 func (book *OrderBook) matchOneLevel(consignation *entities.Consignation, currentLevel *Level) (bool, bool)  {
 	length := len(currentLevel.Consignations)
-	for i:=0; i< length;i++  {
-		if currentLevel.Consignations[i].OpenQuantity < consignation.OpenQuantity {
-			// TODO currentSellLevel.Consignations[i] finish
+	i := 0
+	if length == 0 {
+		return false, true
+	}
+	//var buyConsignation *entities.Consignation
+	//var sellConsignation *entities.Consignation
+	// Match buy order
+	if consignation.Direction == enum.OrderDirection_BUY {
+		for ; i< length;i++  {
 
-			consignation.OpenQuantity -= currentLevel.Consignations[i].OpenQuantity
-		} else {
-			currentLevel.Consignations[i].OpenQuantity -= consignation.OpenQuantity
-			// TODO consignation finish
-			if currentLevel.Consignations[i].OpenQuantity == 0 {
-				// TODO currentSellLevel.Consignations[i] finish
-
+			_, res := book.matchAndCreatOrder(consignation, currentLevel.Consignations[i],currentLevel.Price)
+			if res == enum.MatchCreatOrder_RESULT_SELL_MORE {
+				consignation.Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(consignation)
+				break
+			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
+				consignation.Status = enum.ConsignationStatus_FINISHED
+				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(consignation)
+				book.db.Save(currentLevel.Consignations[i])
+				break
+			} else {
+				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(currentLevel.Consignations[i])
 			}
-			break
+		}
+		// Match sell order
+	} else {
+		for ; i< length;i++  {
+
+			_, res := book.matchAndCreatOrder(currentLevel.Consignations[i], currentLevel.Consignations[i],currentLevel.Price)
+
+			if res == enum.MatchCreatOrder_RESULT_BUY_MORE {
+				consignation.Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(consignation)
+				break
+			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
+				consignation.Status = enum.ConsignationStatus_FINISHED
+				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(consignation)
+				book.db.Save(currentLevel.Consignations[i])
+				break
+			} else {
+				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				book.db.Save(currentLevel.Consignations[i])
+			}
 		}
 	}
+
+	// Remove finished consignations from current level
+	for ; i< length ; i++ {
+		if currentLevel.Consignations[i].OpenQuantity > 0 {
+			currentLevel.Consignations = currentLevel.Consignations[i:]
+		}
+	}
+
+	book.lastPrice = currentLevel.Price
+
 	return consignation.OpenQuantity==0, currentLevel.Consignations[length-1].OpenQuantity == 0
 }
 
@@ -129,7 +173,7 @@ func (book *OrderBook) scanTriggerPoint(start, end decimal.Decimal)  {
 			}
 		}
 
-	// Price decreased, only stop sell can be triggered
+		// Price decreased, only stop sell can be triggered
 	} else if end.Cmp(start) < 0 {
 		currentLevel := book.triggerSellPoint.Top()
 		for currentLevel.Price.Cmp(end) > 0  {
@@ -160,38 +204,12 @@ func (book *OrderBook) scanTriggerPoint(start, end decimal.Decimal)  {
 		}
 
 	}
-
-	//for price, consignations := range book.triggerPoint {
-	//	// Price increased, only stop buy can be triggered
-	//	if end.Cmp(start) > 0  && price.Cmp(start) > 0 && price.Cmp(end) <= 0 {
-	//		buyConsignations := make([]*entities.Consignation,0,3)
-	//		sellConsignations := make([]*entities.Consignation,0,3)
-	//		for i:=0; i<len(consignations) ;i++  {
-	//			if consignations[i].Direction == enum.OrderDirection_BUY {
-	//				buyConsignations = append(buyConsignations,consignations[i])
-	//			} else if consignations[i].Direction == enum.OrderDirection_SELL {
-	//				sellConsignations = append(sellConsignations,consignations[i])
-	//			}
-	//		}
-	//		if len(buyConsignations) > 0 {
-	//			heap.Push(book.buyBook,Level{
-	//				Price:price,
-	//				Consignations: buyConsignations,
-	//			})
-	//		}
-	//		if len(sellConsignations) > 0 {
-	//			heap.Push(book.buyBook,Level{
-	//				Price:price,
-	//				Consignations: sellConsignations,
-	//			})
-	//		}
-	//	}
-	//}
 }
 
 // Porcess limit order
 func (book *OrderBook) addLimit(consignation *entities.Consignation)  {
 	// TODO Insert consignation according to it's priority
+	lastDealPrice := book.lastPrice
 	if consignation.Direction == enum.OrderDirection_BUY {
 
 		// Won't cause match
@@ -203,15 +221,16 @@ func (book *OrderBook) addLimit(consignation *entities.Consignation)  {
 			return
 		}
 
-		book.matchLimit(consignation,book.sellBook)
-
-
-		if consignation.OpenQuantity > 0 {
+		matchFinish := book.matchLimit(consignation,book.sellBook)
+		if !matchFinish {
+			book.db.Save(consignation)
 			heap.Push(book.buyBook, Level{
 				Price: consignation.Price,
 				Consignations:[]*entities.Consignation{consignation},
 			})
-			return
+		}
+		if book.lastPrice.Cmp(lastDealPrice) > 0 {
+			book.scanTriggerPoint(lastDealPrice,book.lastPrice)
 		}
 
 	} else if consignation.Direction == enum.OrderDirection_SELL {
@@ -224,14 +243,17 @@ func (book *OrderBook) addLimit(consignation *entities.Consignation)  {
 			return
 		}
 
-		book.matchLimit(consignation,book.buyBook)
-
-		if consignation.OpenQuantity > 0 {
+		matchFinish :=book.matchLimit(consignation,book.buyBook)
+		if !matchFinish {
+			book.db.Save(consignation)
 			heap.Push(book.sellBook, Level{
 				Price: consignation.Price,
 				Consignations:[]*entities.Consignation{consignation},
 			})
-			return
+		}
+
+		if book.lastPrice.Cmp(lastDealPrice) < 0 {
+			book.scanTriggerPoint(book.lastPrice,lastDealPrice)
 		}
 	}
 }
@@ -242,51 +264,24 @@ func (book *OrderBook) addMarket(consignation *entities.Consignation)  {
 		if (book.sellBook.Len()) == 0 {
 			// TODO invalid market order, should be cancelled
 		} else {
-			currentLevel := book.sellBook.Top()
-			for currentLevel != nil {
-				for i:=0; i<len(currentLevel.Consignations) ;i++  {
-					if currentLevel.Consignations[i].OpenQuantity < consignation.OpenQuantity {
-						// TODO currentSellLevel.Consignations[i] finish
-
-						consignation.OpenQuantity -= currentLevel.Consignations[i].OpenQuantity
-					} else {
-						currentLevel.Consignations[i].OpenQuantity -= consignation.OpenQuantity
-						// TODO consignation finish
-						if currentLevel.Consignations[i].OpenQuantity == 0 {
-							// TODO currentSellLevel.Consignations[i] finish
-						}
-					}
-				}
-				book.sellBook.Pop()
-				currentLevel = book.buyBook.Top()
-				book.topSell = currentLevel.Price
+			consignation.Price = enum.MAX_PRICE
+			finished := book.matchLimit(consignation, book.sellBook)
+			if !finished {
+				book.marketBuyBook = append(book.marketBuyBook, consignation)
 			}
-			book.marketBuyBook = append(book.marketBuyBook, consignation)
+			book.db.Save(consignation)
+
 		}
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		if (book.buyBook.Len()) == 0 {
 			// TODO invalid market order, should be cancelled
 		} else {
-			currentLevel := book.buyBook.Top()
-			for currentLevel != nil {
-				for i:=0; i<len(currentLevel.Consignations) ;i++  {
-					if currentLevel.Consignations[i].OpenQuantity < consignation.OpenQuantity {
-						// TODO currentSellLevel.Consignations[i] finish
-
-						consignation.OpenQuantity -= currentLevel.Consignations[i].OpenQuantity
-					} else {
-						currentLevel.Consignations[i].OpenQuantity -= consignation.OpenQuantity
-						// TODO consignation finish
-						if currentLevel.Consignations[i].OpenQuantity == 0 {
-							// TODO currentSellLevel.Consignations[i] finish
-						}
-					}
-				}
-				book.buyBook.Pop()
-				currentLevel = book.buyBook.Top()
-				book.topBuy = currentLevel.Price
+			consignation.Price = enum.MIN_PRICE
+			finished := book.matchLimit(consignation, book.buyBook)
+			if !finished {
+				book.marketBuyBook = append(book.marketBuyBook, consignation)
 			}
-			book.marketSellBook = append(book.marketSellBook, consignation)
+			book.db.Save(consignation)
 		}
 	}
 }
@@ -315,4 +310,50 @@ func (book *OrderBook) addStop(consignation *entities.Consignation)  {
 
 func (book *OrderBook) cancel(consignation *entities.Consignation)  {
 	// TODO
+}
+
+// Return 1 if buyConsignation's quantity > 0 after mactching
+// Return 0 if buyConsignation's quantity = 0 and sellConsignation's quantity = 0 after mactching
+// Return -1 if buyConsignation's quantity < 0 after mactching
+func (book *OrderBook) matchAndCreatOrder(buyConsignation *entities.Consignation, sellConsignation *entities.Consignation, price decimal.Decimal) (*entities.Order, int)  {
+	var quantity int
+	var res int
+	if buyConsignation.OpenQuantity > sellConsignation.OpenQuantity {
+		quantity = sellConsignation.OpenQuantity
+		quantity = sellConsignation.OpenQuantity
+		sellConsignation.OpenQuantity = 0
+		buyConsignation.OpenQuantity -= sellConsignation.OpenQuantity
+
+		res = enum.MatchCreatOrder_RESULT_BUY_MORE
+	} else if buyConsignation.OpenQuantity == sellConsignation.OpenQuantity {
+		quantity = sellConsignation.OpenQuantity
+		sellConsignation.OpenQuantity = 0
+		buyConsignation.OpenQuantity = 0
+		res = enum.MatchCreatOrder_RESULT_EQUAL
+	} else {
+		quantity = buyConsignation.OpenQuantity
+		buyConsignation.OpenQuantity = 0
+		sellConsignation.OpenQuantity -= buyConsignation.OpenQuantity
+		res = enum.MatchCreatOrder_RESULT_SELL_MORE
+	}
+	order := &entities.Order{
+		BuyerId: buyConsignation.FirmId,
+		SellerId: sellConsignation.FirmId,
+		FutureId: buyConsignation.FutureId,
+		BuyerConsignationId: buyConsignation.ID,
+		SellerConsignationId: sellConsignation.ID,
+		Quantity: quantity,
+		Price: price,
+	}
+	book.db.Save(order)
+	return order,res
+}
+
+func (book *OrderBook) updateTopBuyAndSell()  {
+	if book.buyBook.Top() != nil {
+		book.topBuy = book.buyBook.Top().Price
+	}
+	if book.sellBook.Top() != nil {
+		book.topSell = book.sellBook.Top().Price
+	}
 }

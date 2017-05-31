@@ -24,8 +24,8 @@ type Order struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
 
-
 }
+
 
 func (order *Order) BeforeCreate(scope *gorm.Scope) error {
 	return nil

@@ -6,8 +6,8 @@ import (
 	"github.com/quickfixgo/quickfix"
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
-	"database/sql"
 )
+ 
 
 type Executor struct {
 	redisClient *redis.Client
@@ -55,4 +55,24 @@ func NewExecutor(config ExecutorConfig) (*Executor,error) {
 		orderBooks: obs,
 	}
 	return r,nil
+}
+
+func (executor *Executor) Execute()  {
+	for {
+		for futureId, orderBook := range executor.orderBooks {
+			result, err := executor.redisClient.RPopLPush("future_"+ futureId,"temp_future_" + futureId).Result()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+			fmt.Println(orderBook)
+
+			//orderBook.addLimit()
+			// Match successfully, pop the consignation
+			executor.redisClient.RPop("temp_future_" + futureId)
+		}
+
+	}
+
 }
