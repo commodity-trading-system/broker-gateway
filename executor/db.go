@@ -8,6 +8,15 @@ import (
 
 type DB interface {
 	Migrate()
+	// Create a new object
+	Create(value interface{})
+	// Update completely
+	Save(model interface{})
+	// Update partially
+	Update(model interface{}, attrs map[string]string) *gorm.DB
+
+	Query() *gorm.DB
+
 }
 
 type DBConfig struct {
@@ -47,9 +56,8 @@ func (d *db) Query() *gorm.DB {
 	return d.client
 }
 
-func (d *db) Create(value interface{}) bool  {
+func (d *db) Create(value interface{})  {
 	d.client.Create(value)
-	return d.client.NewRecord(value)
 }
 
 func (d *db) Save(model interface{})  {

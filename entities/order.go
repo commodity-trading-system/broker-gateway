@@ -28,6 +28,5 @@ type Order struct {
 }
 
 func (order *Order) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("id", order.ID.String())
 	return nil
 }

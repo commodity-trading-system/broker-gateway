@@ -9,7 +9,7 @@ import (
 
 type OrderBook struct {
 	// db
-	db *DB
+	db DB
 
 	// For stop order
 	//triggerPoint map[decimal.Decimal][]*entities.Consignation
@@ -32,7 +32,7 @@ type OrderBook struct {
 	marketSellBook []*entities.Consignation
 }
 
-func NewOrderBook(d *DB) *OrderBook  {
+func NewOrderBook(d DB) *OrderBook  {
 	return &OrderBook{
 		db:d,
 		buyBook: NewMaxHeap(),

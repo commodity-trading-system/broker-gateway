@@ -3,7 +3,6 @@ package executor
 import (
 	"github.com/shopspring/decimal"
 	"broker-gateway/entities"
-	"container/heap"
 )
 
 type Level struct {
