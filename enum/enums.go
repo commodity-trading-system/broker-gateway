@@ -1,5 +1,6 @@
 package enum
 
+import "github.com/shopspring/decimal"
 
 type OrderType int
 
@@ -35,4 +36,15 @@ const (
 	ConsignationStatus_FINISHED = 3
 )
 
+
+const (
+	MatchCreatOrder_RESULT_BUY_MORE = 1
+	MatchCreatOrder_RESULT_EQUAL = 0
+	MatchCreatOrder_RESULT_SELL_MORE = -1
+)
+
+var (
+	MAX_PRICE = decimal.New(999999,-2)
+	MIN_PRICE = decimal.Zero
+)
 
