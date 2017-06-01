@@ -46,13 +46,10 @@ func newConsignation(ctype, direction, price, quantity int) *entities.Consignati
 		OpenQuantity: quantity,
 	}
 }
-func add(cons []*entities.Consignation)  {
+
+func addConsignations(cons []*entities.Consignation)  {
 	for i:=0; i<len(cons); i++ {
-		if cons[i].Type == enum.OrdType_LIMIT {
-			book.AddLimit(cons[i])
-		} else if  cons[i].Type == enum.OrdType_MARKET {
-			book.AddMarket(cons[i])
-		}
+		add(book, cons[i])
 	}
 }
 
@@ -73,5 +70,5 @@ func TestOrderBook_AddMarket(t *testing.T) {
 	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100))
 	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5100, 100))
 	cons = append(cons,newConsignation(enum.OrdType_MARKET, enum.OrderDirection_SELL, 5100, 190))
-	add(cons)
+	addConsignations(cons)
 }
