@@ -33,7 +33,7 @@ func TestNewOrderBook(t *testing.T) {
 	book = NewOrderBook(db)
 }
 
-func newLimitConsignation(ctype, direction, price, quantity int) *entities.Consignation  {
+func newConsignation(ctype, direction, price, quantity int) *entities.Consignation  {
 	return &entities.Consignation{
 		ID: uuid.NewV1(),
 		Quantity: quantity,
@@ -46,12 +46,32 @@ func newLimitConsignation(ctype, direction, price, quantity int) *entities.Consi
 		OpenQuantity: quantity,
 	}
 }
+func add(cons []*entities.Consignation)  {
+	for i:=0; i<len(cons); i++ {
+		if cons[i].Type == enum.OrdType_LIMIT {
+			book.AddLimit(cons[i])
+		} else if  cons[i].Type == enum.OrdType_MARKET {
+			book.AddMarket(cons[i])
+		}
+	}
+}
 
 func TestOrderBook_AddLimit(t *testing.T) {
-	c1 := newLimitConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100)
-	c2 := newLimitConsignation(enum.OrdType_LIMIT, enum.OrderDirection_SELL, 5100, 100)
-	c3 := newLimitConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5200, 110)
+	c1 := newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100)
+	c2 := newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_SELL, 5100, 100)
+	c3 := newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5200, 110)
+	c4 := newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_SELL, 5000,110)
 	book.AddLimit(c1)
 	book.AddLimit(c2)
 	book.AddLimit(c3)
+	book.AddLimit(c4)
+}
+
+func TestOrderBook_AddMarket(t *testing.T) {
+	book.Reset()
+	cons := []*entities.Consignation{}
+	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100))
+	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5100, 100))
+	cons = append(cons,newConsignation(enum.OrdType_MARKET, enum.OrderDirection_SELL, 5100, 190))
+	add(cons)
 }
