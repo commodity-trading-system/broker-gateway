@@ -334,8 +334,56 @@ func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 	}
 }
 
+func (book *orderBook) cancelLevel(consignation *entities.Consignation,consignations []*entities.Consignation) bool {
+	for i:=0;i<len(consignations);i++ {
+		if consignations[i].ID == consignation.ID {
+			consignations[i].Status = enum.ConsignationStatus_CANCELLED
+			book.db.Save(consignations[i])
+			consignations = append(consignations[:i], consignations[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
 func (book *orderBook) AddCancel(consignation *entities.Consignation)  {
-	// TODO
+	if consignation.Direction == enum.OrderDirection_BUY {
+		if consignation.Type == enum.OrdType_LIMIT {
+			book.buyBook.Travel(func(level *Level) bool {
+				if book.cancelLevel(consignation, level.Consignations) {
+					return false
+				}
+				return true
+			})
+		} else if consignation.Type == enum.OrdType_MARKET {
+			book.cancelLevel(consignation,book.marketBuyBook)
+		} else if consignation.Type == enum.OrdType_STOP {
+			book.triggerBuyPoint.Travel(func(level *Level) bool {
+				if book.cancelLevel(consignation, level.Consignations) {
+					return false
+				}
+				return true
+			})
+		}
+	} else {
+		if consignation.Type == enum.OrdType_LIMIT {
+			book.sellBook.Travel(func(level *Level) bool {
+				if book.cancelLevel(consignation, level.Consignations) {
+					return false
+				}
+				return true
+			})
+		} else if consignation.Type == enum.OrdType_MARKET {
+			book.cancelLevel(consignation,book.marketSellBook)
+		} else if consignation.Type == enum.OrdType_STOP {
+			book.triggerBuyPoint.Travel(func(level *Level) bool {
+				if book.cancelLevel(consignation, level.Consignations) {
+					return false
+				}
+				return true
+			})
+		}
+	}
 }
 
 func (book *orderBook) Reset()  {
@@ -413,14 +461,14 @@ func (book *orderBook) publishDepth()  {
 	if book.publishCallback != nil {
 		buy := map[decimal.Decimal]int{}
 		sell := map[decimal.Decimal]int{}
-		book.buyBook.Travel(func(level *Level) {
+		book.buyBook.Travel(func(level *Level) bool {
 			quantity := 0
 			for i:=0; i<len(level.Consignations) ;i++  {
 				quantity += level.Consignations[i].OpenQuantity
 			}
 			buy[level.Price] = quantity
 		})
-		book.sellBook.Travel(func(level *Level) {
+		book.sellBook.Travel(func(level *Level) bool {
 			quantity := 0
 			for i:=0; i<len(level.Consignations) ;i++  {
 				quantity += level.Consignations[i].OpenQuantity

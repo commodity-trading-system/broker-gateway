@@ -16,7 +16,7 @@ type Heap []Level
 type HeapInterface interface {
 	heap.Interface
 	Top() *Level
-	Travel(func(level *Level))
+	Travel(func(level *Level) bool)
 }
 
 func (h Heap) Len() int { return len(h) }
@@ -80,8 +80,11 @@ func NewMinHeap() *MinHeap {
 	}
 }
 
-func (h *Heap)Travel(callback func(level *Level))  {
+func (h *Heap)Travel(callback func(level *Level) bool)  {
 	for i:=0; i<len(*h) ;i++  {
-		callback(&(*h)[i])
+		ok := callback(&(*h)[i])
+		if !ok {
+			break
+		}
 	}
 }
