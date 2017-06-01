@@ -16,6 +16,7 @@ type Heap []Level
 type HeapInterface interface {
 	heap.Interface
 	Top() *Level
+	Travel(func(level *Level))
 }
 
 func (h Heap) Len() int { return len(h) }
@@ -76,5 +77,11 @@ func NewMaxHeap() *MaxHeap {
 func NewMinHeap() *MinHeap {
 	return &MinHeap{
 		Heap{},
+	}
+}
+
+func (h *Heap)Travel(callback func(level *Level))  {
+	for i:=0; i<len(*h) ;i++  {
+		callback(&(*h)[i])
 	}
 }

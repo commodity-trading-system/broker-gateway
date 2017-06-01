@@ -47,7 +47,7 @@ func getPricesString(data map[decimal.Decimal]int) string {
 		res += price.String()+"="+strconv.Itoa(quantity)+ ","
 	}
 	if res != "" {
-		res = res[:-1]
+		res = res[:len(res)-1]
 	}
 	return res
 }

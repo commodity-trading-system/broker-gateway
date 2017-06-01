@@ -30,7 +30,7 @@ func TestNewOrderBook(t *testing.T) {
 	db.Empty()
 	db.Migrate()
 
-	book = NewOrderBook(db)
+	book = NewOrderBook(1,db,nil)
 }
 
 func newConsignation(ctype, direction, price, quantity int) *entities.Consignation  {

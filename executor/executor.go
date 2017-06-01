@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"broker-gateway/entities"
 	"broker-gateway/enum"
+	"github.com/coreos/etcd/client"
 )
 
 type Executor interface {
@@ -18,6 +19,7 @@ type executor struct {
 	redisClient *redis.Client
 	*quickfix.MessageRouter
 	orderBooks map[string] OrderBook
+	publisher Publisher
 }
 
 type ExecutorConfig struct {
@@ -31,6 +33,7 @@ type ExecutorConfig struct {
 	MysqlDB string
 	MysqlUser string
 	Futures []string
+	EtcdEndpoints []string
 }
 
 func NewExecutor(config ExecutorConfig) (Executor,error) {
@@ -46,10 +49,16 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		return nil, err
 	}
 
+	etcdPublisher := NewPublisher(client.Config{
+		Endpoints: config.EtcdEndpoints,
+	})
+
 	obs := make(map[string] OrderBook,len(config.Futures))
 	for i:= 0; i< len(config.Futures) ;i++  {
-		obs[config.Futures[i]] = NewOrderBook(db)
+		fid,_ :=strconv.Atoi(config.Futures[i])
+		obs[config.Futures[i]] = NewOrderBook(fid,db, etcdPublisher.Publish)
 	}
+
 
 	r := &executor{
 		redisClient: redis.NewClient(&redis.Options{
@@ -68,8 +77,9 @@ func (executor *executor) Execute()  {
 		for futureId, book := range executor.orderBooks {
 			result, err := executor.redisClient.RPopLPush("future_"+ futureId,"temp_future_" + futureId).Result()
 			if err != nil {
+
 				fmt.Println(err)
-				return
+				continue
 			}
 
 			consignation := entities.Consignation{}

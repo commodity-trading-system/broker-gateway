@@ -16,6 +16,8 @@ type OrderBook interface {
 	AddCancel(consignation *entities.Consignation)
 }
 
+type PublishCallback  func(futureId int,buy,sell map[decimal.Decimal]int)
+
 type orderBook struct {
 	// db
 	db DB
@@ -30,6 +32,8 @@ type orderBook struct {
 	totalBuy uint
 	totalSell uint
 
+	futureId int
+
 
 	// Limit order book
 	buyBook *MaxHeap
@@ -38,9 +42,11 @@ type orderBook struct {
 	// Market order book
 	marketBuyBook []*entities.Consignation
 	marketSellBook []*entities.Consignation
+
+	publishCallback PublishCallback
 }
 
-func NewOrderBook(d DB) OrderBook  {
+func NewOrderBook(futureId int, d DB, publishCallback PublishCallback) OrderBook  {
 	return &orderBook{
 		db:d,
 		buyBook: NewMaxHeap(),
@@ -54,6 +60,8 @@ func NewOrderBook(d DB) OrderBook  {
 		lastPrice: decimal.Zero,
 		totalBuy: 0,
 		totalSell: 0,
+		publishCallback: publishCallback,
+		futureId: futureId,
 	}
 }
 
@@ -399,4 +407,27 @@ func (book *orderBook) updateTopBuyAndSell()  {
 	} else {
 		book.topSell = enum.MAX_PRICE
 	}
+}
+
+func (book *orderBook) publishDepth()  {
+	if book.publishCallback != nil {
+		buy := map[decimal.Decimal]int{}
+		sell := map[decimal.Decimal]int{}
+		book.buyBook.Travel(func(level *Level) {
+			quantity := 0
+			for i:=0; i<len(level.Consignations) ;i++  {
+				quantity += level.Consignations[i].OpenQuantity
+			}
+			buy[level.Price] = quantity
+		})
+		book.sellBook.Travel(func(level *Level) {
+			quantity := 0
+			for i:=0; i<len(level.Consignations) ;i++  {
+				quantity += level.Consignations[i].OpenQuantity
+			}
+			sell[level.Price] = quantity
+		})
+		book.publishCallback(book.futureId, buy, sell)
+	}
+
 }

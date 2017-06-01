@@ -7,6 +7,7 @@ import (
 	"testing"
 	"github.com/go-redis/redis"
 	"broker-gateway/enum"
+	"strings"
 )
 
 var exe *Executor
@@ -17,6 +18,9 @@ func TestNewExecutor(t *testing.T) {
 	port,_ := strconv.ParseInt(os.Getenv("REDIS_PORT"),10,32)
 	db,_ := strconv.ParseInt(os.Getenv("REDIS_DB"),10,32)
 	mysqlPort,_ := strconv.ParseInt(os.Getenv("MYSQL_PORT"),10,32)
+	etcdEndpoints := strings.FieldsFunc(os.Getenv("ETCD_ENDPOINTS"), func(s rune) bool {
+		return s==enum.MARSHAL_DELI
+	})
 	config := ExecutorConfig{
 		RedisHost: os.Getenv("REDIS_HOST"),
 		RedisPort: int(port),
@@ -28,6 +32,7 @@ func TestNewExecutor(t *testing.T) {
 		MysqlDB: os.Getenv("MYSQL_DB"),
 		MysqlUser: os.Getenv("MYSQL_USER"),
 		Futures: []string{"1"},
+		EtcdEndpoints: etcdEndpoints,
 	}
 	fmt.Println(config)
 	red = redis.NewClient(&redis.Options{
@@ -41,11 +46,11 @@ func TestNewExecutor(t *testing.T) {
 		t.Error(intCmd.Err())
 	}
 
-	exe, err := NewExecutor(config)
+	_, err := NewExecutor(config)
 	if err != nil {
 		t.Error(err)
 	}
 
-	exe.Execute()
+	//exe.Execute()
 }
 
