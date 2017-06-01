@@ -48,3 +48,5 @@ var (
 	MIN_PRICE = decimal.Zero
 )
 
+const MARSHAL_DELI  =  ','
+

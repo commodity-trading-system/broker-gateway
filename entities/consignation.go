@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"github.com/satori/go.uuid"
 	"time"
+	"strings"
+	"broker-gateway/enum"
 )
 
 type Consignation struct {
@@ -27,17 +29,37 @@ type Consignation struct {
 	Orders []Order	`gorm:"-"`
 }
 
-func (c Consignation) MarshalBinary() (data []byte, err error) {
-	return []byte(strconv.Itoa(c.Type) + "," +
-		strconv.Itoa(c.Quantity) + "," +
-		strconv.Itoa(c.FutureId) + "," +
-		strconv.Itoa(c.FutureId) + "," +
-		strconv.Itoa(c.OpenQuantity) + "," +
-		strconv.Itoa(c.Direction) + "," +
-		strconv.Itoa(c.FirmId) + "," +
-		c.Price.String() + ","),nil
+func (c *Consignation) MarshalBinary() (data []byte, err error) {
+	return []byte(strconv.Itoa(c.Type) + string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.Quantity) + string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.FutureId) + string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.OpenQuantity) + string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.Direction) + string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.FirmId) + string(enum.MARSHAL_DELI) +
+		c.Price.String() + string(enum.MARSHAL_DELI)),nil
 }
 
-func (c Consignation) UnmarshalBinary(data []byte) error  {
+
+func split(s rune) bool {
+	if s == enum.MARSHAL_DELI {
+		return true
+	}
+	return false
+}
+
+func (c *Consignation) UnmarshalBinary(data []byte) error  {
+	res := strings.FieldsFunc(string(data),split)
+	c.Type,_ 		= strconv.Atoi(res[0])
+	c.Quantity,_ 		= strconv.Atoi(res[1])
+	c.FutureId,_ 		= strconv.Atoi(res[2])
+	c.OpenQuantity,_ 	= strconv.Atoi(res[3])
+	c.Direction,_ 		= strconv.Atoi(res[4])
+	c.FirmId,_ 		= strconv.Atoi(res[5])
+	price,_			:= strconv.ParseFloat(res[6],32)
+	c.Price = decimal.NewFromFloat(price)
 	return nil
+}
+
+func WapperUnmarshalBinary(consignation *Consignation, data[]byte)  {
+	consignation.UnmarshalBinary(data)
 }
