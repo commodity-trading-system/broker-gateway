@@ -10,6 +10,7 @@ import (
 
 type Publisher interface {
 	Publish(futureId int, buy, sell map[decimal.Decimal]int)
+	PublishStatus(id string, status int)
 }
 
 type publisher struct {
@@ -19,6 +20,7 @@ type publisher struct {
 
 const PublishKeyBuy  	= "futures/future_id/buy"
 const PublishKeySell	= "futures/future_id/sell"
+const PublishKeyStatus  = "consignations/id/status"
 
 func (p *publisher) Publish(futureId int,buy,sell map[decimal.Decimal]int)  {
 
@@ -28,6 +30,12 @@ func (p *publisher) Publish(futureId int,buy,sell map[decimal.Decimal]int)  {
 	p.kapi.Set(context.Background(),
 		strings.Replace(PublishKeySell,"future_id",strconv.Itoa(futureId),1),
 		getPricesString(sell),nil)
+}
+
+func (p *publisher) PublishStatus(id string, status int) ()  {
+	p.kapi.Set(context.Background(),
+		strings.Replace(PublishKeyStatus,"id",id,1),
+		strconv.Itoa(status),nil)
 }
 
 func NewPublisher(config client.Config) Publisher  {

@@ -51,7 +51,7 @@ func NewDB(config DBConfig) (DB, error)  {
 
 
 func (d *db) Migrate()  {
-	d.client.AutoMigrate(&entities.Future{}, &entities.Firm{}, &entities.Order{}, &entities.Consignation{})
+	d.client.AutoMigrate(&entities.Future{}, &entities.Firm{}, &entities.Order{}, &entities.Consignation{}, &entities.Quotation{})
 }
 
 func (d *db) Query() *gorm.DB {

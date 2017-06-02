@@ -43,10 +43,10 @@ type orderBook struct {
 	marketBuyBook []*entities.Consignation
 	marketSellBook []*entities.Consignation
 
-	publishCallback PublishCallback
+	publisher Publisher
 }
 
-func NewOrderBook(futureId int, d DB, publishCallback PublishCallback) OrderBook  {
+func NewOrderBook(futureId int, d DB, publisher Publisher) OrderBook  {
 	return &orderBook{
 		db:d,
 		buyBook: NewMaxHeap(),
@@ -60,7 +60,7 @@ func NewOrderBook(futureId int, d DB, publishCallback PublishCallback) OrderBook
 		lastPrice: decimal.Zero,
 		totalBuy: 0,
 		totalSell: 0,
-		publishCallback: publishCallback,
+		publisher: publisher,
 		futureId: futureId,
 	}
 }
@@ -111,17 +111,22 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 			if res == enum.MatchCreatOrder_RESULT_SELL_MORE {
 				consignation.Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(consignation)
+				book.publishStatus(consignation)
 				break
 			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
 				consignation.Status = enum.ConsignationStatus_FINISHED
 				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(consignation)
 				book.db.Save(currentLevel.Consignations[i])
+				book.publishStatus(consignation)
+				book.publishStatus(currentLevel.Consignations[i])
 				break
 			} else {
 				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(currentLevel.Consignations[i])
+				book.publishStatus(currentLevel.Consignations[i])
 			}
+
 		}
 		// Match sell order
 	} else {
@@ -132,16 +137,19 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 			if res == enum.MatchCreatOrder_RESULT_BUY_MORE {
 				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(currentLevel.Consignations[i])
+				book.publishStatus(currentLevel.Consignations[i])
 				break
 			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
 				consignation.Status = enum.ConsignationStatus_FINISHED
 				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(consignation)
 				book.db.Save(currentLevel.Consignations[i])
+				book.publishStatus(consignation)
 				break
 			} else {
 				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
 				book.db.Save(currentLevel.Consignations[i])
+				book.publishStatus(currentLevel.Consignations[i])
 			}
 		}
 	}
@@ -338,6 +346,7 @@ func (book *orderBook) cancelLevel(consignation *entities.Consignation,consignat
 	for i:=0;i<len(consignations);i++ {
 		if consignations[i].ID == consignation.ID {
 			consignations[i].Status = enum.ConsignationStatus_CANCELLED
+			book.publishStatus(consignations[i])
 			book.db.Save(consignations[i])
 			consignations = append(consignations[:i], consignations[i+1:]...)
 			return true
@@ -440,7 +449,12 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		Status:1,
 		ID: uuid.NewV1(),
 	}
+	quotation := &entities.Quotation{
+		FutureId: buyConsignation.FutureId,
+		Price: price,
+	}
 	book.db.Save(order)
+	book.db.Save(quotation)
 	return order,res
 }
 
@@ -458,7 +472,7 @@ func (book *orderBook) updateTopBuyAndSell()  {
 }
 
 func (book *orderBook) publishDepth()  {
-	if book.publishCallback != nil {
+	if book.publisher != nil {
 		buy := map[decimal.Decimal]int{}
 		sell := map[decimal.Decimal]int{}
 		book.buyBook.Travel(func(level *Level) bool {
@@ -477,7 +491,11 @@ func (book *orderBook) publishDepth()  {
 			sell[level.Price] = quantity
 			return  true
 		})
-		book.publishCallback(book.futureId, buy, sell)
+		book.publisher.Publish(book.futureId, buy, sell)
 	}
 
+}
+
+func(book *orderBook) publishStatus (consignation *entities.Consignation)  {
+	book.publisher.PublishStatus(consignation.ID.String(),consignation.Status)
 }
