@@ -467,6 +467,7 @@ func (book *orderBook) publishDepth()  {
 				quantity += level.Consignations[i].OpenQuantity
 			}
 			buy[level.Price] = quantity
+			return true
 		})
 		book.sellBook.Travel(func(level *Level) bool {
 			quantity := 0
@@ -474,6 +475,7 @@ func (book *orderBook) publishDepth()  {
 				quantity += level.Consignations[i].OpenQuantity
 			}
 			sell[level.Price] = quantity
+			return  true
 		})
 		book.publishCallback(book.futureId, buy, sell)
 	}

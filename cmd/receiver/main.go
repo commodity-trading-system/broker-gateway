@@ -9,6 +9,8 @@ import (
 
 	"log"
 	"strconv"
+	"fmt"
+	"os/signal"
 )
 
 func main()  {
@@ -29,13 +31,44 @@ func main()  {
 	flag.Parse()
 	fileName := flag.Arg(0)
 
-	cfg, _ := os.Open(fileName)
-	appSettings, _ := quickfix.ParseSettings(cfg)
-	storeFactory := quickfix.NewMemoryStoreFactory()
-	logFactory, _ := quickfix.NewFileLogFactory(appSettings)
-	acceptor, _ := quickfix.NewAcceptor(app, storeFactory, appSettings, logFactory)
 
-	_ = acceptor.Start()
-	//for condition == true { do something }
+	cfg, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("Invalid config file", err)
+		return
+	}
+
+	appSettings, err := quickfix.ParseSettings(cfg)
+	if err != nil {
+		fmt.Println("Invalid config file", err)
+		return
+	}
+	storeFactory := quickfix.NewMemoryStoreFactory()
+	logFactory, err := quickfix.NewFileLogFactory(appSettings)
+	if err != nil {
+		fmt.Println("New log factory error", err)
+		return
+	}
+	acceptor, err := quickfix.NewAcceptor(app, storeFactory, appSettings, logFactory)
+	if err != nil {
+		fmt.Println("New Acceptor error", err)
+		return
+	}
+
+	err = acceptor.Start()
+	if err != nil {
+		fmt.Println("Acceptor error", err)
+		return
+	}
+	fmt.Println("after start")
+
+	interrupt := make(chan os.Signal)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
+	<-interrupt
+
 	acceptor.Stop()
+
+	//for true {}
+	//for condition == true { do something }
+	//acceptor.Stop()
 }

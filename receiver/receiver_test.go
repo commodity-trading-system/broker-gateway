@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"github.com/quickfixgo/quickfix"
 	"broker-gateway/enum"
+	"fmt"
 )
 
 var receiver *Receiver
@@ -19,6 +20,7 @@ func TestNewReceiver(t *testing.T) {
 		RedisPwd: os.Getenv("REDIS_PASSWORD"),
 		RedisDB: int(db),
 	}
+	fmt.Println(config)
 
 	receiver = NewReceiver(config)
 }

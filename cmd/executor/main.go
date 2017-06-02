@@ -14,6 +14,7 @@ func main()  {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file")
+		return
 	}
 
 	port,_ := strconv.ParseInt(os.Getenv("REDIS_PORT"),10,32)
@@ -21,6 +22,9 @@ func main()  {
 	mysqlPort,_ := strconv.ParseInt(os.Getenv("MYSQL_PORT"),10,32)
 	futures := strings.FieldsFunc(os.Getenv("FUTURES"), func(s rune) bool {
 		return s == enum.MARSHAL_DELI
+	})
+	etcdEndpoints := strings.FieldsFunc(os.Getenv("ETCD_ENDPOINTS"), func(s rune) bool {
+		return s==enum.MARSHAL_DELI
 	})
 	config := executor.ExecutorConfig{
 		RedisHost: os.Getenv("REDIS_HOST"),
@@ -33,6 +37,7 @@ func main()  {
 		MysqlDB: os.Getenv("MYSQL_DB"),
 		MysqlUser: os.Getenv("MYSQL_USER"),
 		Futures: futures,
+		EtcdEndpoints: etcdEndpoints,
 	}
 
 	exe, err := executor.NewExecutor(config)

@@ -3,12 +3,11 @@ package receiver
 import (
 	"github.com/quickfixgo/quickfix"
 	"github.com/go-redis/redis"
-	//"github.com/quickfixgo/quickfix/fix44/newordersingle"
-	//"github.com/quickfixgo/quickfix/enum"
-	"github.com/quickfixgo/quickfix/tag"
 	"broker-gateway/entities"
 	"broker-gateway/enum"
 	"fmt"
+	"strconv"
+	"github.com/satori/go.uuid"
 )
 
 type Receiver struct {
@@ -24,9 +23,11 @@ type ReceiverConfig struct {
 }
 
 func NewReceiver(config ReceiverConfig) *Receiver {
+
+	fmt.Println(config.RedisHost+":"+strconv.Itoa(config.RedisPort))
 	r := &Receiver{
 		redisClient: redis.NewClient(&redis.Options{
-			Addr:     config.RedisHost+":"+string(config.RedisPort),
+			Addr:     config.RedisHost+":"+strconv.Itoa(config.RedisPort),
 			Password: config.RedisPwd,
 			DB:       config.RedisDB,
 		}),
@@ -36,14 +37,21 @@ func NewReceiver(config ReceiverConfig) *Receiver {
 }
 
 func (r*Receiver) OnCreate(sessionID quickfix.SessionID)()  { return }
-func (r*Receiver) OnLogon(sessionID quickfix.SessionID)()  { return }
-func (r*Receiver) OnLogout(sessionID quickfix.SessionID)()  { return }
+func (r*Receiver) OnLogon(sessionID quickfix.SessionID)()  {
+	fmt.Println("logon")
+	return
+}
+func (r*Receiver) OnLogout(sessionID quickfix.SessionID)()  {
+	fmt.Println("logout")
+	return
+}
 func (r*Receiver) ToAdmin(message *quickfix.Message, sessionID quickfix.SessionID)()  { return}
 func (r*Receiver) ToApp(message *quickfix.Message, sessionID quickfix.SessionID) error { return nil}
 func (r*Receiver) FromAdmin(message *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError { return nil }
 
 func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError  {
-	var futureId quickfix.FIXString
+	fmt.Println("收到消息",msg)
+	var futureId quickfix.FIXInt
 	var direction quickfix.FIXInt
 	var firmId quickfix.FIXInt
 	var quantity quickfix.FIXInt
@@ -86,26 +94,30 @@ func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) q
 		orderType.Int() != enum.OrdType_MARKET &&
 		orderType.Int() != enum.OrdType_STOP &&
 		orderType.Int() != enum.OrdType_LIMIT {
-		return quickfix.ValueIsIncorrect(tag.OrdType)
+		return nil
 	}
 
 
-	order := entities.Consignation{
+	consignation := entities.Consignation{
+		ID: uuid.NewV1(),
+		Type: orderType.Int(),
+		FutureId: futureId.Int(),
 		Price: price.Decimal,
 		Quantity: quantity.Int(),
 		Direction: direction.Int(),
 		FirmId: firmId.Int(),
+		Status: enum.ConsignationStatus_APPENDING,
 	}
 
-
-	intCmd := r.redisClient.RPush("future_"+futureId.String(), order)
+	intCmd := r.redisClient.RPush("future_"+strconv.Itoa(futureId.Int()), consignation)
 	if intCmd.Err() != nil {
 		return quickfix.NewMessageRejectError(intCmd.String(),0,nil)
 	}
-	fmt.Println(intCmd.Err())
+
+	nmsg := quickfix.NewMessage()
+	id := quickfix.FIXBytes{}
+	id.Read([]byte(consignation.ID.String()))
+	nmsg.Body.SetField(quickfix.Tag(enum.TagNum_ID),id)
+	quickfix.SendToTarget(nmsg, sessionID)
 	return nil
 }
-
-//func (r*Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, session quickfix.SessionID)  quickfix.MessageRejectError {
-//
-//}
