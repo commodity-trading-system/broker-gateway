@@ -27,6 +27,7 @@ const (
 	TagNum_PRICE		TagNum = 14
 	TagNum_DIRECTION	TagNum = 15
 	TagNum_OrdType		TagNum = 16
+	TagNum_ID		TagNum = 17
 )
 
 const (

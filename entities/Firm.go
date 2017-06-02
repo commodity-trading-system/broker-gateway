@@ -1,9 +1,8 @@
 package entities
 
-import "github.com/jinzhu/gorm"
 
 type Firm struct {
-	gorm.Model
+	ID int `gorm:"primary_key"`
 	Name string
 	AccountKey string
 	SecretKey string

@@ -27,6 +27,7 @@ type Order struct {
 }
 
 
+
 func (order *Order) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("id", uuid.NewV1().String())
 	return nil

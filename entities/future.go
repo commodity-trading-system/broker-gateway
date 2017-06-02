@@ -1,11 +1,9 @@
 package entities
 
-import (
-	"github.com/jinzhu/gorm"
-)
+
 
 type Future struct {
-	gorm.Model
+	ID int 	`gorm:"primary_key"`
 	Name string
 	Description string
 	Period string
