@@ -105,6 +105,12 @@
 			"revisionTime": "2017-03-28T20:01:54Z"
 		},
 		{
+			"checksumSHA1": "V5v7PncxnMJuo9THz0PN7ykg5mw=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "6f3f3919c8781ce5c0509c83fffc887a7830c938",
+			"revisionTime": "2017-03-24T20:14:42Z"
+		},
+		{
 			"checksumSHA1": "+05lmif9N1b+3IEJ3zzbfjW4RCI=",
 			"path": "github.com/kardianos/govendor",
 			"revision": "c86c10d612bf08e847456ce91d495eb69ad87087",
