@@ -7,20 +7,10 @@ import (
 	"fmt"
 	"strconv"
 	"os"
-	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 var q queier.Querier
 
-
-func futures(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	q.Futures()
-}
-
-func consignationsByFirmId(w http.ResponseWriter, r *http.Request, ps httprouter.Params)  {
-
-}
 
 func main()  {
 	err := godotenv.Load()

@@ -8,4 +8,6 @@ COPY . $BROKER_DIR
 
 RUN go build .
 
+EXPOSE 80
+
 ENTRYPOINT ["./querier"]

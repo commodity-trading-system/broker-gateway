@@ -114,10 +114,10 @@ func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) q
 		return quickfix.NewMessageRejectError(intCmd.String(),0,nil)
 	}
 
-	nmsg := quickfix.NewMessage()
 	id := quickfix.FIXBytes{}
 	id.Read([]byte(consignation.ID.String()))
-	nmsg.Body.SetField(quickfix.Tag(enum.TagNum_ID),id)
-	quickfix.SendToTarget(nmsg, sessionID)
+	msg.Body.SetField(quickfix.Tag(enum.TagNum_ID),id)
+	msg.Body.SetField(quickfix.Tag(58),orderType)
+	quickfix.SendToTarget(msg, sessionID)
 	return nil
 }

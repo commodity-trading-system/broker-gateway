@@ -14,15 +14,15 @@ const (
 type OrderDirection string
 
 const (
-	OrderDirection_SELL    = 0
+	OrderDirection_SELL    = 2
 	OrderDirection_BUY     = 1
 )
 
 type TagNum int
 
 const (
-	TagNum_FIRMID		TagNum = 11
-	TagNum_FUTUREID		TagNum = 12
+	TagNum_FUTUREID		TagNum = 11
+	TagNum_FIRMID		TagNum = 12
 	TagNum_QUANTITY		TagNum = 13
 	TagNum_PRICE		TagNum = 14
 	TagNum_DIRECTION	TagNum = 15

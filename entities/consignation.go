@@ -29,14 +29,16 @@ type Consignation struct {
 	Orders []Order	`gorm:"-"`
 }
 
-func (c *Consignation) MarshalBinary() (data []byte, err error) {
+func (c Consignation) MarshalBinary() (data []byte, err error) {
 	return []byte(strconv.Itoa(c.Type) + string(enum.MARSHAL_DELI) +
 		strconv.Itoa(c.Quantity) + string(enum.MARSHAL_DELI) +
 		strconv.Itoa(c.FutureId) + string(enum.MARSHAL_DELI) +
 		strconv.Itoa(c.OpenQuantity) + string(enum.MARSHAL_DELI) +
 		strconv.Itoa(c.Direction) + string(enum.MARSHAL_DELI) +
 		strconv.Itoa(c.FirmId) + string(enum.MARSHAL_DELI) +
-		c.Price.String() + string(enum.MARSHAL_DELI)),nil
+		c.Price.String() + string(enum.MARSHAL_DELI) +
+		c.ID.String()+ string(enum.MARSHAL_DELI) +
+		strconv.Itoa(c.Status)),nil
 }
 
 
@@ -47,7 +49,7 @@ func split(s rune) bool {
 	return false
 }
 
-func (c *Consignation) UnmarshalBinary(data []byte) error  {
+func (c Consignation) UnmarshalBinary(data []byte) error  {
 	res := strings.FieldsFunc(string(data),split)
 	c.Type,_ 		= strconv.Atoi(res[0])
 	c.Quantity,_ 		= strconv.Atoi(res[1])
@@ -57,6 +59,8 @@ func (c *Consignation) UnmarshalBinary(data []byte) error  {
 	c.FirmId,_ 		= strconv.Atoi(res[5])
 	price,_			:= strconv.ParseFloat(res[6],32)
 	c.Price = decimal.NewFromFloat(price)
+	id, _ := uuid.FromString(res[7])
+	c.ID = id
 	return nil
 }
 
