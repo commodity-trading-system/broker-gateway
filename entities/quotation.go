@@ -7,6 +7,6 @@ import (
 
 type Quotation struct {
 	FutureId int	`gorm:"primary_key"`
-	Price decimal.Decimal
-	CreatedAt time.Time
+	Price decimal.Decimal	`gorm:"type:decimal(10,2)"`
+	CreatedAt time.Time	`sql:"index"`
 }

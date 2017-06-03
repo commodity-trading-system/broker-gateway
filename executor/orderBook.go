@@ -497,5 +497,8 @@ func (book *orderBook) publishDepth()  {
 }
 
 func(book *orderBook) publishStatus (consignation *entities.Consignation)  {
-	book.publisher.PublishStatus(consignation.ID.String(),consignation.Status)
+	if book.publisher != nil {
+		book.publisher.PublishStatus(consignation.ID.String(),consignation.Status)
+	}
+
 }

@@ -56,7 +56,7 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 	obs := make(map[string] OrderBook,len(config.Futures))
 	for i:= 0; i< len(config.Futures) ;i++  {
 		fid,_ :=strconv.Atoi(config.Futures[i])
-		obs[config.Futures[i]] = NewOrderBook(fid,db, etcdPublisher.Publish)
+		obs[config.Futures[i]] = NewOrderBook(fid,db, etcdPublisher)
 	}
 
 
