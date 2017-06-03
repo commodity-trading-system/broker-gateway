@@ -68,6 +68,7 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		}),
 		orderBooks: obs,
 	}
+	db.Migrate()
 	return r,nil
 }
 

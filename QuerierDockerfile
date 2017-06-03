@@ -1,0 +1,11 @@
+FROM golang:1.8-alpine
+
+ENV BROKER_DIR /go/src/broker-gateway/
+
+WORKDIR $BROKER_DIR/cmd/querier
+
+COPY . $BROKER_DIR
+
+RUN go build .
+
+ENTRYPOINT ["./querier"]
