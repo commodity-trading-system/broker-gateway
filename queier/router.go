@@ -66,6 +66,16 @@ func (rte *router)consignationsByFirmIdAndId(w http.ResponseWriter, r *http.Requ
 	w.Write(res)
 }
 
+func (rte *router)quotationsByFutureId(w http.ResponseWriter, r *http.Request, ps httprouter.Params)  {
+	futureId,_ := strconv.Atoi(ps.ByName("id"))
+	rtn := rte.q.Quotations(futureId)
+	res, err := json.Marshal(rtn)
+	if err != nil {
+		fmt.Println(err)
+	}
+	w.Write(res)
+}
+
 func NewRouter(q Querier) Router {
 	r := httprouter.New()
 
@@ -79,10 +89,12 @@ func NewRouter(q Querier) Router {
 
 func (rte *router) register()  {
 	rte.http.GET("/futures",rte.futures)
+	rte.http.GET("/futures/:id", rte.quotationsByFutureId)
 	rte.http.GET("/firms/:firmId/orders",rte.ordersByFirmId)
 	rte.http.GET("/firms/:firmId/orders/:id",rte.ordersByFirmIdAndId)
 	rte.http.GET("/firms/:firmId/consignations",rte.ordersByFirmId)
 	rte.http.GET("/firms/:firmId/consignations/:id",rte.ordersByFirmIdAndId)
+
 }
 
 func (r *router) Start(port int)  {

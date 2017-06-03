@@ -3,7 +3,6 @@ package queier
 import (
 	"broker-gateway/executor"
 	"broker-gateway/entities"
-	"fmt"
 	"github.com/satori/go.uuid"
 )
 
@@ -13,6 +12,7 @@ type Querier interface {
 	Orders(firmId int)	[]entities.Order
 	OrderById(firmId int, id string)	entities.Order
 	Futures()	[]entities.Future
+	Quotations(futureId int)[]entities.Quotation
 }
 
 type querier struct {
@@ -77,8 +77,13 @@ func (q querier) ConsignationById(firmId int, id string) entities.Consignation {
 func (q querier) Futures() []entities.Future {
 	var futures  []entities.Future
 	q.db.Query().Find(&futures)
-	fmt.Println(futures)
 	return futures
+}
+
+func (q querier) Quotations(futureId int)[]entities.Quotation  {
+	var entity  []entities.Quotation
+	q.db.Query().Where("future_id = ?",futureId).Find(&entity)
+	return entity
 }
 
 
