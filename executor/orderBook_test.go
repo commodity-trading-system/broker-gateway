@@ -72,3 +72,17 @@ func TestOrderBook_AddMarket(t *testing.T) {
 	cons = append(cons,newConsignation(enum.OrdType_MARKET, enum.OrderDirection_SELL, 5100, 190))
 	addConsignations(cons)
 }
+
+func TestOrderBook_AddCancel(t *testing.T) {
+	book.Reset()
+	cons := []*entities.Consignation{}
+	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100))
+	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5100, 100))
+	addConsignations(cons)
+	book.AddCancel(&entities.Consignation{
+		ID:cons[0].ID,
+		Type: enum.OrdType_CANCEL,
+		Direction: enum.OrderDirection_BUY,
+	})
+	book.AddLimit(newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_SELL, 5100, 100))
+}

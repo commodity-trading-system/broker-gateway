@@ -109,22 +109,22 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 
 			_, res := book.matchAndCreatOrder(consignation, currentLevel.Consignations[i],currentLevel.Price)
 			if res == enum.MatchCreatOrder_RESULT_SELL_MORE {
-				consignation.Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(consignation)
-				book.publishStatus(consignation)
+				//consignation.Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(consignation)
+				//book.publishStatus(consignation)
 				break
 			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
-				consignation.Status = enum.ConsignationStatus_FINISHED
-				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(consignation)
-				book.db.Save(currentLevel.Consignations[i])
-				book.publishStatus(consignation)
-				book.publishStatus(currentLevel.Consignations[i])
+				//consignation.Status = enum.ConsignationStatus_FINISHED
+				//currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(consignation)
+				//book.db.Save(currentLevel.Consignations[i])
+				//book.publishStatus(consignation)
+				//book.publishStatus(currentLevel.Consignations[i])
 				break
 			} else {
-				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(currentLevel.Consignations[i])
-				book.publishStatus(currentLevel.Consignations[i])
+				//currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(currentLevel.Consignations[i])
+				//book.publishStatus(currentLevel.Consignations[i])
 			}
 
 		}
@@ -135,21 +135,21 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 			_, res := book.matchAndCreatOrder(currentLevel.Consignations[i], consignation,currentLevel.Price)
 
 			if res == enum.MatchCreatOrder_RESULT_BUY_MORE {
-				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(currentLevel.Consignations[i])
-				book.publishStatus(currentLevel.Consignations[i])
+				//currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(currentLevel.Consignations[i])
+				//book.publishStatus(currentLevel.Consignations[i])
 				break
 			} else if res == enum.MatchCreatOrder_RESULT_EQUAL {
-				consignation.Status = enum.ConsignationStatus_FINISHED
-				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(consignation)
-				book.db.Save(currentLevel.Consignations[i])
-				book.publishStatus(consignation)
+				//consignation.Status = enum.ConsignationStatus_FINISHED
+				//currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(consignation)
+				//book.db.Save(currentLevel.Consignations[i])
+				//book.publishStatus(consignation)
 				break
 			} else {
-				currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
-				book.db.Save(currentLevel.Consignations[i])
-				book.publishStatus(currentLevel.Consignations[i])
+				//currentLevel.Consignations[i].Status = enum.ConsignationStatus_FINISHED
+				//book.db.Save(currentLevel.Consignations[i])
+				//book.publishStatus(currentLevel.Consignations[i])
 			}
 		}
 	}
@@ -357,41 +357,41 @@ func (book *orderBook) cancelLevel(consignation *entities.Consignation,consignat
 
 func (book *orderBook) AddCancel(consignation *entities.Consignation)  {
 	if consignation.Direction == enum.OrderDirection_BUY {
-		if consignation.Type == enum.OrdType_LIMIT {
-			book.buyBook.Travel(func(level *Level) bool {
-				if book.cancelLevel(consignation, level.Consignations) {
-					return false
-				}
-				return true
-			})
-		} else if consignation.Type == enum.OrdType_MARKET {
-			book.cancelLevel(consignation,book.marketBuyBook)
-		} else if consignation.Type == enum.OrdType_STOP {
-			book.triggerBuyPoint.Travel(func(level *Level) bool {
-				if book.cancelLevel(consignation, level.Consignations) {
-					return false
-				}
-				return true
-			})
-		}
+		book.buyBook.Travel(func(level *Level) bool {
+			if book.cancelLevel(consignation, level.Consignations) {
+				return false
+			}
+			return true
+		})
+		book.cancelLevel(consignation,book.marketBuyBook)
+		book.triggerBuyPoint.Travel(func(level *Level) bool {
+			if book.cancelLevel(consignation, level.Consignations) {
+				return false
+			}
+			return true
+		})
 	} else {
-		if consignation.Type == enum.OrdType_LIMIT {
-			book.sellBook.Travel(func(level *Level) bool {
-				if book.cancelLevel(consignation, level.Consignations) {
-					return false
-				}
-				return true
-			})
-		} else if consignation.Type == enum.OrdType_MARKET {
-			book.cancelLevel(consignation,book.marketSellBook)
-		} else if consignation.Type == enum.OrdType_STOP {
-			book.triggerBuyPoint.Travel(func(level *Level) bool {
-				if book.cancelLevel(consignation, level.Consignations) {
-					return false
-				}
-				return true
-			})
-		}
+		book.sellBook.Travel(func(level *Level) bool {
+			if book.cancelLevel(consignation, level.Consignations) {
+				return false
+			}
+			return true
+		})
+		book.cancelLevel(consignation,book.marketSellBook)
+		book.triggerBuyPoint.Travel(func(level *Level) bool {
+			if book.cancelLevel(consignation, level.Consignations) {
+				return false
+			}
+			return true
+		})
+		//
+		//if consignation.Type == enum.OrdType_LIMIT {
+		//
+		//} else if consignation.Type == enum.OrdType_MARKET {
+		//
+		//} else if consignation.Type == enum.OrdType_STOP {
+		//
+		//}
 	}
 }
 
@@ -424,18 +424,31 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		quantity = sellConsignation.OpenQuantity
 		sellConsignation.OpenQuantity = 0
 		buyConsignation.OpenQuantity -= quantity
-
+		sellConsignation.Status = enum.ConsignationStatus_FINISHED
+		if buyConsignation.OpenQuantity > 0 {
+			buyConsignation.Status = enum.ConsignationStatus_PARTIAL
+		} else {
+			buyConsignation.Status = enum.ConsignationStatus_FINISHED
+		}
 		res = enum.MatchCreatOrder_RESULT_BUY_MORE
 	} else if buyConsignation.OpenQuantity == sellConsignation.OpenQuantity {
 		quantity = sellConsignation.OpenQuantity
 		sellConsignation.OpenQuantity = 0
 		buyConsignation.OpenQuantity = 0
 		res = enum.MatchCreatOrder_RESULT_EQUAL
+		sellConsignation.Status = enum.ConsignationStatus_FINISHED
+		buyConsignation.Status = enum.ConsignationStatus_FINISHED
 	} else {
 		quantity = buyConsignation.OpenQuantity
 		buyConsignation.OpenQuantity = 0
 		sellConsignation.OpenQuantity -= quantity
 		res = enum.MatchCreatOrder_RESULT_SELL_MORE
+		buyConsignation.Status = enum.ConsignationStatus_FINISHED
+		if sellConsignation.OpenQuantity > 0 {
+			sellConsignation.Status = enum.ConsignationStatus_PARTIAL
+		} else {
+			sellConsignation.Status = enum.ConsignationStatus_FINISHED
+		}
 	}
 	order := &entities.Order{
 		BuyerId: buyConsignation.FirmId,
@@ -455,6 +468,10 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 	}
 	book.db.Save(order)
 	book.db.Save(quotation)
+	book.db.Save(buyConsignation)
+	book.db.Save(sellConsignation)
+	book.publishStatus(buyConsignation)
+	book.publishStatus(sellConsignation)
 	return order,res
 }
 
