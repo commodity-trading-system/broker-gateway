@@ -169,12 +169,14 @@ func (rte *router) register()  {
 		firmId,_ :=strconv.Atoi(h.URL.Query().Get("firmId"))
 		futureId,_ := strconv.Atoi(h.URL.Query().Get("futureId"))
 		orderType,_ := strconv.Atoi(h.URL.Query().Get("orderType"))
+		percent,_ := strconv.Atoi(h.URL.Query().Get("percent"))
 		id,_ :=  strconv.Atoi(p.ByName("id"))
 		comm := entities.Commission{
 			ID: id,
 			FirmId: firmId,
 			FutureId: futureId,
 			OrderType: orderType,
+			CommissionPercent: percent,
 		}
 		rte.q.Save(comm)
 		echo(w, comm)
@@ -185,11 +187,13 @@ func (rte *router) register()  {
 		futureId,_ := strconv.Atoi(h.URL.Query().Get("futureId"))
 		orderType,_ := strconv.Atoi(h.URL.Query().Get("orderType"))
 		id,_ :=  strconv.Atoi(p.ByName("id"))
+		percent,_ := strconv.Atoi(h.URL.Query().Get("percent"))
 		comm := entities.Commission{
 			ID: id,
 			FirmId: firmId,
 			FutureId: futureId,
 			OrderType: orderType,
+			CommissionPercent: percent,
 		}
 		rte.q.Save(comm)
 		echo(w, comm)
