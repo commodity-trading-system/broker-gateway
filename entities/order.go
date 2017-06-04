@@ -15,10 +15,12 @@ type Order struct {
 	SellerId int
 	FutureId int
 	Status int
-	Commission decimal.Decimal	`gorm:"type:decimal(10,2)"`
+	SellerCommission decimal.Decimal	`gorm:"type:decimal(10,2)"`
+	BuyerCommission decimal.Decimal		`gorm:"type:decimal(10,2)"`
 
 	BuyerConsignationId uuid.UUID	`gorm:"type:varchar(255);index"`
 	SellerConsignationId uuid.UUID	`gorm:"type:varchar(255);index"`
+
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

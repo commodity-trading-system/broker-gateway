@@ -53,7 +53,12 @@ func NewDB(config DBConfig) (DB, error)  {
 
 
 func (d *db) Migrate()  {
-	d.client.AutoMigrate(&entities.Future{}, &entities.Firm{}, &entities.Order{}, &entities.Consignation{}, &entities.Quotation{})
+	d.client.AutoMigrate(&entities.Future{},
+		&entities.Firm{},
+		&entities.Order{},
+		&entities.Consignation{},
+		&entities.Quotation{},
+		&entities.Commission{})
 }
 
 func (d *db) Query() *gorm.DB {
@@ -73,7 +78,7 @@ func (d *db) Update(model interface{}, attrs map[string]string) *gorm.DB {
 }
 
 func (d *db) Empty() {
-	tables := []string{"futures","firms","orders","consignations","quotations"}
+	tables := []string{"futures","firms","orders","consignations","quotations","commissions"}
 	for i:=0; i<len(tables); i++ {
 		d.client.DropTable(tables[i])
 	}
@@ -102,10 +107,21 @@ func (d *db) Seeder()  {
 	})
 
 	d.Save(&entities.Future{
-		ID: 3,
+		ID: 4,
 		Name: "gold",
 		Period: "12",
 		Description: "-2017.12 gold",
 	})
+
+	commissions := [][]int{[]int{1,1,3,1},[]int{1,1,5,2},[]int{1,1,10,3}}
+
+	for i:=0; i<len(commissions) ;i++  {
+		d.Save(&entities.Commission{
+			FirmId: commissions[i][0],
+			FutureId: commissions[i][1],
+			CommissionPercent: commissions[i][2],
+			OrderType: commissions[i][3],
+		})
+	}
 
 }

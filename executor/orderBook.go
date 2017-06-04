@@ -45,9 +45,11 @@ type orderBook struct {
 	marketSellBook []*entities.Consignation
 
 	publisher Publisher
+
+	insp *inspector
 }
 
-func NewOrderBook(futureId int, d DB, publisher Publisher) OrderBook  {
+func NewOrderBook(futureId int, d DB, publisher Publisher, insp *inspector) OrderBook  {
 	return &orderBook{
 		db:d,
 		buyBook: NewMaxHeap(),
@@ -63,6 +65,8 @@ func NewOrderBook(futureId int, d DB, publisher Publisher) OrderBook  {
 		totalSell: 0,
 		publisher: publisher,
 		futureId: futureId,
+		insp: insp,
+
 	}
 }
 
@@ -463,6 +467,8 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 			sellConsignation.Status = enum.ConsignationStatus_FINISHED
 		}
 	}
+
+	total := price.Mul(decimal.New(int64(quantity),0))
 	order := &entities.Order{
 		BuyerId: buyConsignation.FirmId,
 		SellerId: sellConsignation.FirmId,
@@ -471,7 +477,8 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		SellerConsignationId: sellConsignation.ID,
 		Quantity: quantity,
 		Price: price,
-		Commission: decimal.Zero,
+		BuyerCommission: book.insp.GetCommission(book.futureId,buyConsignation.FirmId,buyConsignation.Type, total),
+		SellerCommission: book.insp.GetCommission(book.futureId,sellConsignation.FirmId,sellConsignation.Type, total),
 		Status:1,
 		ID: uuid.NewV1(),
 	}

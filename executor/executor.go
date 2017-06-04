@@ -9,6 +9,8 @@ import (
 	"broker-gateway/entities"
 	"broker-gateway/enum"
 	"github.com/coreos/etcd/client"
+	"time"
+	"github.com/shopspring/decimal"
 )
 
 type Executor interface {
@@ -20,6 +22,7 @@ type executor struct {
 	*quickfix.MessageRouter
 	orderBooks map[string] OrderBook
 	publisher Publisher
+	db DB
 }
 
 type ExecutorConfig struct {
@@ -34,6 +37,42 @@ type ExecutorConfig struct {
 	MysqlUser string
 	Futures []string
 	EtcdEndpoints []string
+}
+
+type inspector struct {
+	db DB
+	//  setting[futureId][firmId][type]
+	commissionSetting map[int]map[int]map[int]int
+}
+
+func (in *inspector) GetCommission(futureId, firmId, orderType int, amount decimal.Decimal) decimal.Decimal {
+	firmAndOrderType, exist := in.commissionSetting[futureId]
+	if ! exist {
+		return decimal.New(0,0)
+	}
+	drTy, exist := firmAndOrderType[firmId]
+	if ! exist {
+		return decimal.New(0,0)
+	}
+
+	percent, exist := drTy[orderType]
+	if ! exist {
+		return decimal.New(0,0)
+	}
+	return amount.Div(decimal.New(int64(percent),-2))
+}
+
+
+func (in *inspector) MonitorSetting()  {
+	for true {
+		var commissions []entities.Commission
+		in.db.Query().Find(&commissions)
+		for i:=0; i< len(commissions) ;i++  {
+			in.commissionSetting[commissions[i].FutureId][commissions[i].FirmId][commissions[i].OrderType] = commissions[i].CommissionPercent
+		}
+		time.Sleep(time.Second * 10)
+	}
+
 }
 
 func NewExecutor(config ExecutorConfig) (Executor,error) {
@@ -57,10 +96,17 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		Endpoints: config.EtcdEndpoints,
 	})
 
+	insp := &inspector{
+		commissionSetting: map[int]map[int]map[int]int{},
+		db: db,
+	}
+
+	go insp.MonitorSetting()
+
 	obs := make(map[string] OrderBook,len(config.Futures))
 	for i:= 0; i< len(config.Futures) ;i++  {
 		fid,_ :=strconv.Atoi(config.Futures[i])
-		obs[config.Futures[i]] = NewOrderBook(fid,db, etcdPublisher)
+		obs[config.Futures[i]] = NewOrderBook(fid,db, etcdPublisher,insp)
 	}
 
 
@@ -70,11 +116,16 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 			Password: config.RedisPwd,
 			DB:       config.RedisDB,
 		}),
+		db:db,
 		orderBooks: obs,
 	}
+
+	go r.MonitorSetting()
+
 	db.Migrate()
 	return r,nil
 }
+
 
 
 func (executor *executor) Execute()  {
