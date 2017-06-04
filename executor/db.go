@@ -19,6 +19,8 @@ type DB interface {
 
 	Empty()
 
+	Seeder()
+
 }
 
 type DBConfig struct {
@@ -71,8 +73,39 @@ func (d *db) Update(model interface{}, attrs map[string]string) *gorm.DB {
 }
 
 func (d *db) Empty() {
-	tables := []string{"futures","firms","orders","consignations"}
+	tables := []string{"futures","firms","orders","consignations","quotations"}
 	for i:=0; i<len(tables); i++ {
 		d.client.DropTable(tables[i])
 	}
+}
+
+func (d *db) Seeder()  {
+	d.Save(&entities.Future{
+		ID: 1,
+		Name: "oil",
+		Period: "10",
+		Description: "-2017.10 oil",
+	})
+
+	d.Save(&entities.Future{
+		ID: 2,
+		Name: "oil",
+		Period: "12",
+		Description: "-2017.12 oil",
+	})
+
+	d.Save(&entities.Future{
+		ID: 3,
+		Name: "gold",
+		Period: "8",
+		Description: "-2017.8 gold",
+	})
+
+	d.Save(&entities.Future{
+		ID: 3,
+		Name: "gold",
+		Period: "12",
+		Description: "-2017.12 gold",
+	})
+
 }

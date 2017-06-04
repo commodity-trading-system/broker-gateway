@@ -49,6 +49,10 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		return nil, err
 	}
 
+	db.Empty()
+	db.Migrate()
+	db.Seeder()
+
 	etcdPublisher := NewPublisher(client.Config{
 		Endpoints: config.EtcdEndpoints,
 	})
