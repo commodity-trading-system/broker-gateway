@@ -7,12 +7,13 @@ import (
 	"strconv"
 	"github.com/shopspring/decimal"
 	"fmt"
+	"time"
 )
 
 type Publisher interface {
 	Publish(futureId int, buy, sell map[decimal.Decimal]int)
 	PublishStatus(id string, status int)
-	PublishLatestPrice(id string, price decimal.Decimal)
+	PublishLatestPrice(id string, price decimal.Decimal, t time.Time)
 }
 
 type publisher struct {
@@ -41,10 +42,10 @@ func (p *publisher) PublishStatus(id string, status int) ()  {
 		strconv.Itoa(status),nil)
 }
 
-func (p *publisher) PublishLatestPrice(id string, price decimal.Decimal) ()  {
+func (p *publisher) PublishLatestPrice(id string, price decimal.Decimal, t time.Time) ()  {
 	_,err := p.kapi.Set(context.Background(),
 		strings.Replace(PublishKeyLatestPrice,"id",id,1),
-		price.String(),nil)
+		price.String() + "," + t.String(),nil)
 	if err != nil {
 		fmt.Println(err)
 	}

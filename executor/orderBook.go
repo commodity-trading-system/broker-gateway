@@ -8,6 +8,7 @@ import (
 	"github.com/satori/go.uuid"
 	"strconv"
 	"fmt"
+	"time"
 )
 
 type OrderBook interface {
@@ -487,9 +488,10 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 	quotation := &entities.Quotation{
 		FutureId: buyConsignation.FutureId,
 		Price: price,
+		CreatedAt: time.Now(),
 	}
 
-	book.publisher.PublishLatestPrice(strconv.Itoa(order.FutureId),price)
+	book.publisher.PublishLatestPrice(strconv.Itoa(order.FutureId),price, quotation.CreatedAt)
 	book.db.Save(order)
 	book.db.Save(quotation)
 	book.db.Save(buyConsignation)
