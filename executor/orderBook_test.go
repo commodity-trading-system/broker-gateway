@@ -29,8 +29,6 @@ func TestNewOrderBook(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	db.Empty()
-	db.Migrate()
 	etcdEndpoints := strings.FieldsFunc(os.Getenv("ETCD_ENDPOINTS"), func(s rune) bool {
 		return s==enum.MARSHAL_DELI
 	})
@@ -38,7 +36,14 @@ func TestNewOrderBook(t *testing.T) {
 		Endpoints: etcdEndpoints,
 	})
 
-	book = NewOrderBook(1,db,publisher)
+	insp := &inspector{
+		db:db,
+		commissionSetting: map[int]map[int]map[int]int{},
+	}
+
+	go insp.InspectSetting()
+
+	book = NewOrderBook(1,db,publisher,insp)
 }
 
 func newConsignation(ctype, direction, price, quantity int) *entities.Consignation  {
@@ -48,7 +53,7 @@ func newConsignation(ctype, direction, price, quantity int) *entities.Consignati
 		Price: decimal.New(int64(price),-2),
 		FutureId: 1,
 		Type: ctype,
-		FirmId: 2,
+		FirmId: 1,
 		Direction: direction,
 		Status: enum.ConsignationStatus_APPENDING,
 		OpenQuantity: quantity,
@@ -82,7 +87,7 @@ func TestOrderBook_AddMarket(t *testing.T) {
 }
 
 func TestOrderBook_AddCancel(t *testing.T) {
-	book.Reset()
+	//book.Reset()
 	cons := []*entities.Consignation{}
 	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5000, 100))
 	cons = append(cons,newConsignation(enum.OrdType_LIMIT, enum.OrderDirection_BUY, 5100, 100))

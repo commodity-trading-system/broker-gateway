@@ -9,8 +9,9 @@ import (
 	"broker-gateway/entities"
 	"broker-gateway/enum"
 	"github.com/coreos/etcd/client"
-	"time"
+	//"time"
 	"github.com/shopspring/decimal"
+	"time"
 )
 
 type Executor interface {
@@ -48,27 +49,41 @@ type inspector struct {
 func (in *inspector) GetCommission(futureId, firmId, orderType int, amount decimal.Decimal) decimal.Decimal {
 	firmAndOrderType, exist := in.commissionSetting[futureId]
 	if ! exist {
-		return decimal.New(0,0)
+		return decimal.Zero
 	}
 	drTy, exist := firmAndOrderType[firmId]
 	if ! exist {
-		return decimal.New(0,0)
+		return decimal.Zero
 	}
 
 	percent, exist := drTy[orderType]
 	if ! exist {
-		return decimal.New(0,0)
+		return decimal.Zero
 	}
-	return amount.Div(decimal.New(int64(percent),-2))
+	return amount.Mul(decimal.New(int64(percent),-2))
 }
 
 
-func (in *inspector) MonitorSetting()  {
+func (in *inspector) InspectSetting()  {
 	for true {
 		var commissions []entities.Commission
 		in.db.Query().Find(&commissions)
 		for i:=0; i< len(commissions) ;i++  {
-			in.commissionSetting[commissions[i].FutureId][commissions[i].FirmId][commissions[i].OrderType] = commissions[i].CommissionPercent
+
+			firmAndOrderType, exist := in.commissionSetting[commissions[i].FutureId]
+			if ! exist {
+				in.commissionSetting[commissions[i].FutureId] = map[int]map[int]int{}
+				firmAndOrderType = in.commissionSetting[commissions[i].FutureId]
+			}
+			drTy, exist := firmAndOrderType[commissions[i].FirmId]
+			if ! exist {
+				firmAndOrderType[commissions[i].FirmId] = map[int]int{}
+				drTy = firmAndOrderType[commissions[i].FirmId]
+			}
+
+			//percent, _ := drTy[commissions[i].OrderType]
+			drTy[commissions[i].OrderType] = commissions[i].CommissionPercent
+
 		}
 		time.Sleep(time.Second * 10)
 	}
@@ -101,7 +116,8 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		db: db,
 	}
 
-	go insp.MonitorSetting()
+	go insp.InspectSetting()
+
 
 	obs := make(map[string] OrderBook,len(config.Futures))
 	for i:= 0; i< len(config.Futures) ;i++  {
@@ -120,9 +136,6 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		orderBooks: obs,
 	}
 
-	go r.MonitorSetting()
-
-	db.Migrate()
 	return r,nil
 }
 

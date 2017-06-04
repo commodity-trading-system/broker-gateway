@@ -7,6 +7,7 @@ import (
 	"container/heap"
 	"github.com/satori/go.uuid"
 	"strconv"
+	"fmt"
 )
 
 type OrderBook interface {
@@ -482,6 +483,7 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		Status:1,
 		ID: uuid.NewV1(),
 	}
+	fmt.Println(order.BuyerCommission)
 	quotation := &entities.Quotation{
 		FutureId: buyConsignation.FutureId,
 		Price: price,
