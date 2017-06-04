@@ -106,6 +106,7 @@ func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) q
 		Quantity: quantity.Int(),
 		Direction: direction.Int(),
 		FirmId: firmId.Int(),
+		OpenQuantity: quantity.Int(),
 		Status: enum.ConsignationStatus_APPENDING,
 	}
 
