@@ -25,15 +25,14 @@ const PublishKeyBuy  	= "futures/future_id/buy"
 const PublishKeySell	= "futures/future_id/sell"
 const PublishKeyStatus  = "consignations/id/status"
 const PublishKeyLatestPrice  = "futures/id/latest"
+const PublishKeyFuture  = "futures/id"
 
 func (p *publisher) Publish(futureId int,buy,sell map[decimal.Decimal]int)  {
 
 	p.kapi.Set(context.Background(),
-		strings.Replace(PublishKeyBuy,"future_id",strconv.Itoa(futureId),1),
-		getPricesString(buy),nil)
-	p.kapi.Set(context.Background(),
-		strings.Replace(PublishKeySell,"future_id",strconv.Itoa(futureId),1),
-		getPricesString(sell),nil)
+		strings.Replace(PublishKeyFuture,"future_id",strconv.Itoa(futureId),1),
+		getPricesString(buy)  + ";" + getPricesString(sell),nil)
+
 }
 
 func (p *publisher) PublishStatus(id string, status int) ()  {
