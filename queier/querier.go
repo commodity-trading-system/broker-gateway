@@ -16,6 +16,10 @@ type Querier interface {
 
 	Futures()	[]entities.Future
 	Quotations(futureId,limit,offset int)[]entities.Quotation
+
+
+	Update(entity interface{})
+	Save(entity interface{})
 }
 
 type querier struct {
@@ -87,6 +91,14 @@ func (q querier) ConsignationById(firmId int, id string) entities.Consignation {
 	var consignation entities.Consignation
 	q.db.Query().Where("id = ? ", id).First(&consignation)
 	return consignation
+}
+
+func (q querier) Update(entity interface{})  {
+	q.db.Save(entity)
+}
+
+func (q querier) Save(entity interface{})  {
+	q.db.Save(entity)
 }
 
 

@@ -163,6 +163,37 @@ func (rte *router) register()  {
 		offset,_ := strconv.Atoi(h.URL.Query().Get("offset"))
 		echo(w,rte.q.AllConsignations(limit,offset))
 	})
+	
+	
+	rte.http.PUT("/admin/commissions/:id", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
+		firmId,_ :=strconv.Atoi(h.URL.Query().Get("firmId"))
+		futureId,_ := strconv.Atoi(h.URL.Query().Get("futureId"))
+		orderType,_ := strconv.Atoi(h.URL.Query().Get("orderType"))
+		id,_ :=  strconv.Atoi(p.ByName("id"))
+		comm := entities.Commission{
+			ID: id,
+			FirmId: firmId,
+			FutureId: futureId,
+			OrderType: orderType,
+		}
+		rte.q.Save(comm)
+		echo(w, comm)
+	})
+	
+	rte.http.POST("/admin/commissions", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
+		firmId,_ :=strconv.Atoi(h.URL.Query().Get("firmId"))
+		futureId,_ := strconv.Atoi(h.URL.Query().Get("futureId"))
+		orderType,_ := strconv.Atoi(h.URL.Query().Get("orderType"))
+		id,_ :=  strconv.Atoi(p.ByName("id"))
+		comm := entities.Commission{
+			ID: id,
+			FirmId: firmId,
+			FutureId: futureId,
+			OrderType: orderType,
+		}
+		rte.q.Save(comm)
+		echo(w, comm)
+	})
 
 
 }
