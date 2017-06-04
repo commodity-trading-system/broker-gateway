@@ -6,11 +6,13 @@ import (
 	"strings"
 	"strconv"
 	"github.com/shopspring/decimal"
+	"fmt"
 )
 
 type Publisher interface {
 	Publish(futureId int, buy, sell map[decimal.Decimal]int)
 	PublishStatus(id string, status int)
+	PublishLatestPrice(id string, price decimal.Decimal)
 }
 
 type publisher struct {
@@ -21,6 +23,7 @@ type publisher struct {
 const PublishKeyBuy  	= "futures/future_id/buy"
 const PublishKeySell	= "futures/future_id/sell"
 const PublishKeyStatus  = "consignations/id/status"
+const PublishKeyLatestPrice  = "futures/id/latest"
 
 func (p *publisher) Publish(futureId int,buy,sell map[decimal.Decimal]int)  {
 
@@ -37,6 +40,18 @@ func (p *publisher) PublishStatus(id string, status int) ()  {
 		strings.Replace(PublishKeyStatus,"id",id,1),
 		strconv.Itoa(status),nil)
 }
+
+func (p *publisher) PublishLatestPrice(id string, price decimal.Decimal) ()  {
+	_,err := p.kapi.Set(context.Background(),
+		strings.Replace(PublishKeyLatestPrice,"id",id,1),
+		price.String(),nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+
+
 
 func NewPublisher(config client.Config) Publisher  {
 	c, err := client.New(config)

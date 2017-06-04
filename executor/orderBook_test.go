@@ -8,6 +8,8 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
 	"broker-gateway/enum"
+	"github.com/coreos/etcd/client"
+	"strings"
 )
 
 var book OrderBook
@@ -29,8 +31,14 @@ func TestNewOrderBook(t *testing.T) {
 	}
 	db.Empty()
 	db.Migrate()
+	etcdEndpoints := strings.FieldsFunc(os.Getenv("ETCD_ENDPOINTS"), func(s rune) bool {
+		return s==enum.MARSHAL_DELI
+	})
+	publisher := NewPublisher(client.Config{
+		Endpoints: etcdEndpoints,
+	})
 
-	book = NewOrderBook(1,db,nil)
+	book = NewOrderBook(1,db,publisher)
 }
 
 func newConsignation(ctype, direction, price, quantity int) *entities.Consignation  {

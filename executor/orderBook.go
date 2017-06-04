@@ -6,6 +6,7 @@ import (
 	"broker-gateway/enum"
 	"container/heap"
 	"github.com/satori/go.uuid"
+	"strconv"
 )
 
 type OrderBook interface {
@@ -244,10 +245,13 @@ func (book *orderBook) AddLimit(consignation *entities.Consignation)  {
 				Price: consignation.Price,
 				Consignations:[]*entities.Consignation{consignation},
 			})
+
 			book.db.Save(&consignation)
+			book.publishStatus(consignation)
 		} else {
 			matchFinish := book.matchLimit(consignation,book.sellBook)
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 			if !matchFinish {
 				heap.Push(book.buyBook, Level{
 					Price: consignation.Price,
@@ -259,8 +263,6 @@ func (book *orderBook) AddLimit(consignation *entities.Consignation)  {
 			}
 		}
 
-
-
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		// Won't cause match
 		if book.buyBook.Len() == 0 || consignation.Price.Cmp(book.topSell) > 0 {
@@ -269,10 +271,12 @@ func (book *orderBook) AddLimit(consignation *entities.Consignation)  {
 				Consignations:[]*entities.Consignation{consignation},
 			})
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 			return
 		} else {
 			matchFinish :=book.matchLimit(consignation,book.buyBook)
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 			if !matchFinish {
 				heap.Push(book.sellBook, Level{
 					Price: consignation.Price,
@@ -295,6 +299,7 @@ func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 		if (book.sellBook.Len()) == 0 {
 			consignation.Status = enum.ConsignationStatus_INVALID
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 		} else {
 
 			consignation.OpenQuantity = consignation.Quantity
@@ -304,12 +309,14 @@ func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 				book.marketBuyBook = append(book.marketBuyBook, consignation)
 			}
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 
 		}
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		if (book.buyBook.Len()) == 0 {
 			consignation.Status = enum.ConsignationStatus_INVALID
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 		} else {
 			consignation.OpenQuantity = consignation.Quantity
 			consignation.Price = enum.MIN_PRICE
@@ -318,6 +325,7 @@ func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 				book.marketBuyBook = append(book.marketBuyBook, consignation)
 			}
 			book.db.Save(consignation)
+			book.publishStatus(consignation)
 		}
 	}
 }
@@ -326,7 +334,6 @@ func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 	if consignation.Direction == enum.OrderDirection_BUY {
 		if consignation.Price.Cmp(book.topSell) <= 0 {
 			consignation.Status = enum.ConsignationStatus_INVALID
-			book.db.Save(consignation)
 		} else {
 			heap.Push(book.triggerBuyPoint,Level{
 				Price: consignation.Price,
@@ -336,7 +343,6 @@ func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		if consignation.Price.Cmp(book.topBuy) >= 0 {
 			consignation.Status = enum.ConsignationStatus_INVALID
-			book.db.Save(consignation)
 		} else {
 			heap.Push(book.triggerSellPoint,Level{
 				Price: consignation.Price,
@@ -344,6 +350,9 @@ func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 			})
 		}
 	}
+
+	book.db.Save(consignation)
+	book.publishStatus(consignation)
 }
 
 func (book *orderBook) cancelLevel(consignation *entities.Consignation,consignations []*entities.Consignation) bool {
@@ -470,6 +479,8 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		FutureId: buyConsignation.FutureId,
 		Price: price,
 	}
+
+	book.publisher.PublishLatestPrice(strconv.Itoa(order.FutureId),price)
 	book.db.Save(order)
 	book.db.Save(quotation)
 	book.db.Save(buyConsignation)
