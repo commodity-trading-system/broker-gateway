@@ -117,6 +117,7 @@ func (d *db) Seeder()  {
 
 	for i:=0; i<len(commissions) ;i++  {
 		d.Save(&entities.Commission{
+			ID: i,
 			FirmId: commissions[i][0],
 			FutureId: commissions[i][1],
 			CommissionPercent: commissions[i][2],
