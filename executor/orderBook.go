@@ -293,7 +293,8 @@ func (book *orderBook) AddLimit(consignation *entities.Consignation)  {
 func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 	if consignation.Direction == enum.OrderDirection_BUY {
 		if (book.sellBook.Len()) == 0 {
-			// TODO invalid market order, should be cancelled
+			consignation.Status = enum.ConsignationStatus_INVALID
+			book.db.Save(consignation)
 		} else {
 
 			consignation.OpenQuantity = consignation.Quantity
@@ -307,7 +308,8 @@ func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 		}
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		if (book.buyBook.Len()) == 0 {
-			// TODO invalid market order, should be cancelled
+			consignation.Status = enum.ConsignationStatus_INVALID
+			book.db.Save(consignation)
 		} else {
 			consignation.OpenQuantity = consignation.Quantity
 			consignation.Price = enum.MIN_PRICE
@@ -323,7 +325,8 @@ func (book *orderBook) AddMarket(consignation *entities.Consignation)  {
 func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 	if consignation.Direction == enum.OrderDirection_BUY {
 		if consignation.Price.Cmp(book.topSell) <= 0 {
-			// TODO invalid stop buy order
+			consignation.Status = enum.ConsignationStatus_INVALID
+			book.db.Save(consignation)
 		} else {
 			heap.Push(book.triggerBuyPoint,Level{
 				Price: consignation.Price,
@@ -332,7 +335,8 @@ func (book *orderBook) AddStop(consignation *entities.Consignation)  {
 		}
 	} else if consignation.Direction == enum.OrderDirection_SELL {
 		if consignation.Price.Cmp(book.topBuy) >= 0 {
-			// TODO invalid stop buy order
+			consignation.Status = enum.ConsignationStatus_INVALID
+			book.db.Save(consignation)
 		} else {
 			heap.Push(book.triggerSellPoint,Level{
 				Price: consignation.Price,

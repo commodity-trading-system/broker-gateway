@@ -35,6 +35,7 @@ const (
 	ConsignationStatus_APPENDING = 1
 	ConsignationStatus_PARTIAL = 2
 	ConsignationStatus_FINISHED = 3
+	ConsignationStatus_INVALID = 4
 )
 
 
