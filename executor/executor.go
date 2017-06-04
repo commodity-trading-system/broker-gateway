@@ -82,8 +82,12 @@ func (executor *executor) Execute()  {
 		for futureId, book := range executor.orderBooks {
 			result, err := executor.redisClient.RPopLPush("future_"+ futureId,"temp_future_" + futureId).Result()
 			if err != nil {
+				if err.Error() == "redis: nil" {
+					continue
+				}
 				fmt.Println(err)
 				continue
+
 			}
 
 			consignation := entities.Consignation{}
