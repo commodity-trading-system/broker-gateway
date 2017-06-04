@@ -49,7 +49,7 @@ func split(s rune) bool {
 	return false
 }
 
-func (c Consignation) UnmarshalBinary(data []byte) error  {
+func (c *Consignation) UnmarshalBinary(data []byte) error  {
 	res := strings.FieldsFunc(string(data),split)
 	c.Type,_ 		= strconv.Atoi(res[0])
 	c.Quantity,_ 		= strconv.Atoi(res[1])
