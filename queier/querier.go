@@ -3,16 +3,19 @@ package queier
 import (
 	"broker-gateway/executor"
 	"broker-gateway/entities"
-	"github.com/satori/go.uuid"
 )
 
 type Querier interface {
-	Consignations(int) []entities.Consignation
-	ConsignationById(firmId int, id string) entities.Consignation
-	Orders(firmId int)	[]entities.Order
+	AllOrders(limit, offset int) []entities.Order
+	Orders(firmId, limit, offset int) []entities.Order
 	OrderById(firmId int, id string)	entities.Order
+
+	AllConsignations(limit, offset int) []entities.Consignation
+	Consignations(firmId,limit, offset int) []entities.Consignation
+	ConsignationById(firmId int, id string) entities.Consignation
+
 	Futures()	[]entities.Future
-	Quotations(futureId int)[]entities.Quotation
+	Quotations(futureId,limit,offset int)[]entities.Quotation
 }
 
 type querier struct {
@@ -30,39 +33,53 @@ func NewQuerier(cfg executor.DBConfig) Querier {
 	}
 }
 
-func (q querier) Orders(firmId int) []entities.Order {
+func (q querier) AllOrders(limit, offset int) []entities.Order {
 	var orders []entities.Order
-	q.db.Query().Where("buyer_id = ? ",firmId).Or("seller_id = ? ", firmId).Find(&orders)
-	for i:=0;i<len(orders);i++ {
-		if orders[i].BuyerId == firmId {
-			orders[i].SellerId = -1
-			orders[i].SellerConsignationId = uuid.FromStringOrNil("")
-		} else {
-			orders[i].BuyerId = -1
-			orders[i].BuyerConsignationId = uuid.FromStringOrNil("")
-		}
-	}
+	q.db.Query().
+		Limit(limit).
+		Offset(offset).
+		Order("created_at desc").
+		Find(&orders)
+	return orders
+}
+
+func (q querier) Orders(firmId, limit, offset int) []entities.Order {
+	var orders []entities.Order
+	q.db.Query().
+		Limit(limit).
+		Offset(offset).
+		Order("created_at desc").
+		Where("buyer_id = ? ",firmId).
+		Or("seller_id = ? ", firmId).
+		Find(&orders)
 	return orders
 }
 
 func (q querier) OrderById(firmId int, id string) entities.Order {
 	var order entities.Order
 	q.db.Query().Where("id = ? ", id).First(&order)
-	if order.BuyerId == firmId {
-		order.SellerId = -1
-		order.SellerConsignationId = uuid.FromStringOrNil("")
-	} else if order.SellerId == firmId {
-		order.BuyerId = -1
-		order.BuyerConsignationId = uuid.FromStringOrNil("")
-	} else {
-		order = entities.Order{}
-	}
 	return order
 }
 
-func (q querier) Consignations(firmId int) []entities.Consignation {
+func (q querier) AllConsignations(limit, offset int) []entities.Consignation {
 	var consignations []entities.Consignation
-	q.db.Query().Where("firm_id = ? ",firmId).Find(&consignations)
+	q.db.Query().
+		Limit(limit).
+		Offset(offset).
+		Order("created_at desc").
+		//Where("firm_id = ? ",firmId).
+		Find(&consignations)
+	return consignations
+}
+
+func (q querier) Consignations(firmId,limit, offset int) []entities.Consignation {
+	var consignations []entities.Consignation
+	q.db.Query().
+		Limit(limit).
+		Offset(offset).
+		Order("created_at desc").
+		Where("firm_id = ? ",firmId).
+		Find(&consignations)
 	return consignations
 }
 
@@ -80,9 +97,15 @@ func (q querier) Futures() []entities.Future {
 	return futures
 }
 
-func (q querier) Quotations(futureId int)[]entities.Quotation  {
+func (q querier) Quotations(futureId int,limit, offset int)[]entities.Quotation  {
 	var entity  []entities.Quotation
-	q.db.Query().Where("future_id = ?",futureId).Find(&entity)
+	q.db.Query().
+		Limit(limit).
+		Offset(offset).
+		Order("created_at desc").
+		Where("future_id = ?",futureId).
+		//Where("created_at > ? AND created_at < ?",start, end).
+		Find(&entity)
 	return entity
 }
 

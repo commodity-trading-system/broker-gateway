@@ -58,11 +58,14 @@ func (c *Consignation) UnmarshalBinary(data []byte) error  {
 	c.Direction,_ 		= strconv.Atoi(res[4])
 	c.FirmId,_ 		= strconv.Atoi(res[5])
 	price,_			:= strconv.ParseFloat(res[6],32)
-	c.Price = decimal.NewFromFloat(price)
-	id, _ := uuid.FromString(res[7])
+	c.Price 		= decimal.NewFromFloat(price)
+	id, _ 			:= uuid.FromString(res[7])
 	c.ID = id
+	c.Status, _ 		= strconv.Atoi(res[8])
 	return nil
 }
+
+
 
 func WapperUnmarshalBinary(consignation *Consignation, data[]byte)  {
 	consignation.UnmarshalBinary(data)

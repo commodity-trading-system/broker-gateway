@@ -28,6 +28,23 @@ type Order struct {
 
 
 
+func TransformForFirm(o interface{}, firmId int) Order  {
+	order := o.(Order)
+	if order.BuyerId == firmId {
+		order.SellerId = -1
+		order.SellerConsignationId = uuid.FromStringOrNil("")
+	} else if order.SellerId == firmId {
+		order.BuyerId = -1
+		order.BuyerConsignationId = uuid.FromStringOrNil("")
+	} else {
+		order = Order{}
+	}
+
+	return order
+}
+
+
+
 func (order *Order) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("id", uuid.NewV1().String())
 	return nil
