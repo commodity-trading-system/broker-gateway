@@ -39,7 +39,7 @@ func (rte *router)futures(w http.ResponseWriter, r *http.Request, ps httprouter.
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.Write(res)
+	echo(w, res)
 }
 //
 //func (rte *router)ordersByFirmId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -179,7 +179,7 @@ func (rte *router) register()  {
 			OrderType: orderType,
 			CommissionPercent: percent,
 		}
-		rte.q.Save(comm)
+		rte.q.Save(&comm)
 		echo(w, comm)
 	})
 
@@ -202,7 +202,7 @@ func (rte *router) register()  {
 			OrderType: orderType,
 			CommissionPercent: percent,
 		}
-		rte.q.Save(comm)
+		rte.q.Save(&comm)
 		echo(w, comm)
 	})
 
