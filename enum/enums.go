@@ -28,6 +28,7 @@ const (
 	TagNum_DIRECTION	TagNum = 15
 	TagNum_OrdType		TagNum = 16
 	TagNum_ID		TagNum = 17
+	TagNum_STATUS		TagNum = 20
 )
 
 const (

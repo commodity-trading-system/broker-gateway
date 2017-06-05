@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"strconv"
 	"github.com/satori/go.uuid"
+	"broker-gateway/executor"
 )
 
 type Receiver struct {
 	redisClient *redis.Client
 	*quickfix.MessageRouter
+	db executor.DB
+	insp executor.Inspector
 }
 
 type ReceiverConfig struct {
@@ -20,11 +23,32 @@ type ReceiverConfig struct {
 	RedisPort int
 	RedisPwd string
 	RedisDB int
+
+	MysqlHost string
+	MysqlPort int
+	MysqlPwd string
+	MysqlDB string
+	MysqlUser string
 }
 
 func NewReceiver(config ReceiverConfig) *Receiver {
 
 	fmt.Println(config.RedisHost+":"+strconv.Itoa(config.RedisPort))
+	db,err := executor.NewDB(executor.DBConfig{
+		Host: config.MysqlHost,
+		Port: config.MysqlPort,
+		User:config.MysqlUser,
+		Password:config.MysqlPwd,
+		DBName:config.MysqlDB,
+	})
+
+	if err != nil {
+		fmt.Println("Mysql inital error:",err)
+		return nil
+	}
+	insp := executor.NewInspector(db)
+	go insp.InspectFirmFuture()
+
 	r := &Receiver{
 		redisClient: redis.NewClient(&redis.Options{
 			Addr:     config.RedisHost+":"+strconv.Itoa(config.RedisPort),
@@ -32,6 +56,8 @@ func NewReceiver(config ReceiverConfig) *Receiver {
 			DB:       config.RedisDB,
 		}),
 		MessageRouter: quickfix.NewMessageRouter(),
+		db:db,
+		insp: insp,
 	}
 	return r
 }
@@ -110,15 +136,25 @@ func (r*Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) q
 		Status: enum.ConsignationStatus_APPENDING,
 	}
 
+	id := quickfix.FIXBytes{}
+	id.Read([]byte(consignation.ID.String()))
+	msg.Body.SetField(quickfix.Tag(enum.TagNum_ID),id)
+	msg.Body.SetField(quickfix.Tag(58),orderType)
+
+
+	validate := r.insp.ValidateFutureId(consignation.FirmId, consignation.FutureId)
+	if ! validate {
+		msg.Body.SetField(quickfix.Tag(enum.TagNum_STATUS),quickfix.FIXInt(enum.ConsignationStatus_INVALID))
+		quickfix.SendToTarget(msg, sessionID)
+		return nil
+	}
+
 	intCmd := r.redisClient.RPush("future_"+strconv.Itoa(futureId.Int()), consignation)
 	if intCmd.Err() != nil {
 		return quickfix.NewMessageRejectError(intCmd.String(),0,nil)
 	}
 
-	id := quickfix.FIXBytes{}
-	id.Read([]byte(consignation.ID.String()))
-	msg.Body.SetField(quickfix.Tag(enum.TagNum_ID),id)
-	msg.Body.SetField(quickfix.Tag(58),orderType)
+
 	quickfix.SendToTarget(msg, sessionID)
 	return nil
 }

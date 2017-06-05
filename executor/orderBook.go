@@ -48,10 +48,10 @@ type orderBook struct {
 
 	publisher Publisher
 
-	insp *inspector
+	insp Inspector
 }
 
-func NewOrderBook(futureId int, d DB, publisher Publisher, insp *inspector) OrderBook  {
+func NewOrderBook(futureId int, d DB, publisher Publisher, insp Inspector) OrderBook  {
 	return &orderBook{
 		db:d,
 		buyBook: NewMaxHeap(),

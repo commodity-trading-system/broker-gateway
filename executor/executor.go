@@ -9,9 +9,6 @@ import (
 	"broker-gateway/entities"
 	"broker-gateway/enum"
 	"github.com/coreos/etcd/client"
-	//"time"
-	"github.com/shopspring/decimal"
-	"time"
 )
 
 type Executor interface {
@@ -40,55 +37,6 @@ type ExecutorConfig struct {
 	EtcdEndpoints []string
 }
 
-type inspector struct {
-	db DB
-	//  setting[futureId][firmId][type]
-	commissionSetting map[int]map[int]map[int]int
-}
-
-func (in *inspector) GetCommission(futureId, firmId, orderType int, amount decimal.Decimal) decimal.Decimal {
-	firmAndOrderType, exist := in.commissionSetting[futureId]
-	if ! exist {
-		return decimal.Zero
-	}
-	drTy, exist := firmAndOrderType[firmId]
-	if ! exist {
-		return decimal.Zero
-	}
-
-	percent, exist := drTy[orderType]
-	if ! exist {
-		return decimal.Zero
-	}
-	return amount.Mul(decimal.New(int64(percent),-2))
-}
-
-
-func (in *inspector) InspectSetting()  {
-	for true {
-		var commissions []entities.Commission
-		in.db.Query().Find(&commissions)
-		for i:=0; i< len(commissions) ;i++  {
-
-			firmAndOrderType, exist := in.commissionSetting[commissions[i].FutureId]
-			if ! exist {
-				in.commissionSetting[commissions[i].FutureId] = map[int]map[int]int{}
-				firmAndOrderType = in.commissionSetting[commissions[i].FutureId]
-			}
-			drTy, exist := firmAndOrderType[commissions[i].FirmId]
-			if ! exist {
-				firmAndOrderType[commissions[i].FirmId] = map[int]int{}
-				drTy = firmAndOrderType[commissions[i].FirmId]
-			}
-
-			//percent, _ := drTy[commissions[i].OrderType]
-			drTy[commissions[i].OrderType] = commissions[i].CommissionPercent
-
-		}
-		time.Sleep(time.Second * 10)
-	}
-
-}
 
 func NewExecutor(config ExecutorConfig) (Executor,error) {
 
@@ -111,10 +59,7 @@ func NewExecutor(config ExecutorConfig) (Executor,error) {
 		Endpoints: config.EtcdEndpoints,
 	})
 
-	insp := &inspector{
-		commissionSetting: map[int]map[int]map[int]int{},
-		db: db,
-	}
+	insp := NewInspector(db)
 
 	go insp.InspectSetting()
 
@@ -158,8 +103,8 @@ func (executor *executor) Execute()  {
 			entities.WapperUnmarshalBinary(&consignation,[]byte(result))
 			add(book, &consignation)
 
+			fmt.Println("Firm:",consignation.FirmId,"    FutureId:", consignation.FutureId)
 			fmt.Println(result)
-			fmt.Println(consignation)
 
 			// Match successfully, pop the consignation
 			executor.redisClient.RPop("temp_future_" + futureId)

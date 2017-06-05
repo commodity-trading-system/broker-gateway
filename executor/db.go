@@ -58,7 +58,8 @@ func (d *db) Migrate()  {
 		&entities.Order{},
 		&entities.Consignation{},
 		&entities.Quotation{},
-		&entities.Commission{})
+		&entities.Commission{},
+		&entities.FirmFuture{})
 }
 
 func (d *db) Query() *gorm.DB {
@@ -78,7 +79,7 @@ func (d *db) Update(model interface{}, attrs map[string]string) *gorm.DB {
 }
 
 func (d *db) Empty() {
-	tables := []string{"futures","firms","orders","consignations","quotations","commissions"}
+	tables := []string{"futures","firms","orders","consignations","quotations","commissions","firm_futures"}
 	for i:=0; i<len(tables); i++ {
 		d.client.DropTable(tables[i])
 	}
@@ -124,5 +125,14 @@ func (d *db) Seeder()  {
 			OrderType: commissions[i][3],
 		})
 	}
+
+	d.Save(&entities.FirmFuture{
+		FirmId: 1,
+		FutureId: 1,
+	})
+	d.Save(&entities.FirmFuture{
+		FirmId: 1,
+		FutureId: 2,
+	})
 
 }
