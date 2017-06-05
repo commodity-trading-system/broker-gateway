@@ -101,6 +101,7 @@ func echo(w http.ResponseWriter, entity interface{})  {
 	if err != nil {
 		fmt.Println(err)
 	}
+	w.Header().Set("Access-Control-Allow-Origin","*")
 	w.Write(res)
 }
 
