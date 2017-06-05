@@ -185,7 +185,7 @@ func (rte *router) register()  {
 
 	rte.http.GET("/admin/commissions", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
 		var res []entities.Commission
-		rte.q.Query().Find(res)
+		rte.q.Query().Find(&res)
 		echo(w, res)
 	})
 	

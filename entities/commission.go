@@ -1,7 +1,7 @@
 package entities
 
 type Commission struct {
-	ID int
+	ID int	`gorm:"primary_key"`
 	FirmId int
 	OrderType int
 	FutureId int
