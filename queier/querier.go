@@ -3,6 +3,7 @@ package queier
 import (
 	"broker-gateway/executor"
 	"broker-gateway/entities"
+	"github.com/jinzhu/gorm"
 )
 
 type Querier interface {
@@ -20,6 +21,8 @@ type Querier interface {
 
 	Update(entity interface{})
 	Save(entity interface{})
+
+	Query() *gorm.DB
 }
 
 type querier struct {
@@ -35,6 +38,10 @@ func NewQuerier(cfg executor.DBConfig) Querier {
 	return &querier{
 		db:db,
 	}
+}
+
+func (q querier) Query() *gorm.DB {
+	return q.db.Query()
 }
 
 func (q querier) AllOrders(limit, offset int) []entities.Order {

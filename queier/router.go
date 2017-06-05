@@ -182,6 +182,12 @@ func (rte *router) register()  {
 		rte.q.Save(comm)
 		echo(w, comm)
 	})
+
+	rte.http.GET("/admin/commissions", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
+		var res []entities.Commission
+		rte.q.Query().Find(res)
+		echo(w, res)
+	})
 	
 	rte.http.POST("/admin/commissions", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
 		firmId,_ :=strconv.Atoi(h.URL.Query().Get("firmId"))
@@ -198,6 +204,12 @@ func (rte *router) register()  {
 		}
 		rte.q.Save(comm)
 		echo(w, comm)
+	})
+
+	rte.http.GET("/admin/firmFutures", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
+		var res []entities.FirmFuture
+		rte.q.Query().Find(res)
+		echo(w, res)
 	})
 
 
