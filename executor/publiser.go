@@ -31,7 +31,7 @@ func (p *publisher) Publish(futureId int,buy,sell map[decimal.Decimal]int)  {
 
 	p.kapi.Set(context.Background(),
 		strings.Replace(PublishKeyFuture,"future_id",strconv.Itoa(futureId),1),
-		getPricesString(buy)  + ";" + getPricesString(sell),nil)
+		getPricesString(buy)  + "$" + getPricesString(sell),nil)
 
 }
 

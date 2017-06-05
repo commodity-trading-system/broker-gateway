@@ -497,8 +497,10 @@ func (book *orderBook) matchAndCreatOrder(buyConsignation *entities.Consignation
 		Price: price,
 		CreatedAt: time.Now(),
 	}
+	fmt.Println("buyConsignation:",buyConsignation.ID,"     Order Price:", price)
 
-	book.publisher.PublishLatestPrice(strconv.Itoa(order.FutureId),price, quotation.CreatedAt)
+	go book.publisher.PublishLatestPrice(strconv.Itoa(order.FutureId),price, quotation.CreatedAt)
+
 	book.db.Save(order)
 	book.db.Save(quotation)
 	book.db.Save(buyConsignation)
