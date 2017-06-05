@@ -112,7 +112,7 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 	//var sellConsignation *entities.Consignation
 	// Match buy order
 	if consignation.Direction == enum.OrderDirection_BUY {
-		for ; i< length;i++  {
+		for ; i< len(currentLevel.Consignations);i++  {
 
 			_, res := book.matchAndCreatOrder(consignation, currentLevel.Consignations[i],currentLevel.Price)
 			if res == enum.MatchCreatOrder_RESULT_SELL_MORE {
@@ -137,7 +137,7 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 		}
 		// Match sell order
 	} else {
-		for ; i< length;i++  {
+		for ; i< len(currentLevel.Consignations);i++  {
 
 			_, res := book.matchAndCreatOrder(currentLevel.Consignations[i], consignation,currentLevel.Price)
 
@@ -162,7 +162,7 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 	}
 
 	// Remove finished consignations from current level
-	for ; i< length ; i++ {
+	for ; i< len(currentLevel.Consignations) ; i++ {
 		if currentLevel.Consignations[i].OpenQuantity > 0 {
 			currentLevel.Consignations = currentLevel.Consignations[i:]
 		}
