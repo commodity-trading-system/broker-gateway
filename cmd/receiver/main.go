@@ -20,11 +20,20 @@ func main()  {
 	}
 	port,_ := strconv.ParseInt(env["REDIS_PORT"],10,32)
 	db,_ := strconv.ParseInt(env["REDIS_DB"],10,32)
+
+	mysqlPort,_ := strconv.ParseInt(os.Getenv("MYSQL_PORT"),10,32)
+
 	config := receiver.ReceiverConfig{
 		RedisHost: env["REDIS_HOST"],
 		RedisPort: int(port),
 		RedisPwd: env["REDIS_PASSWORD"],
 		RedisDB: int(db),
+
+		MysqlHost: os.Getenv("MYSQL_HOST"),
+		MysqlPort: int(mysqlPort),
+		MysqlPwd: os.Getenv("MYSQL_PASSWORD"),
+		MysqlDB: os.Getenv("MYSQL_DB"),
+		MysqlUser: os.Getenv("MYSQL_USER"),
 	}
 
 	app := receiver.NewReceiver(config)
