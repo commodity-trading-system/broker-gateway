@@ -35,11 +35,7 @@ func NewRouter(q Querier) Router {
 
 func (rte *router)futures(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	futures := rte.q.Futures()
-	res, err := json.Marshal(futures)
-	if err != nil {
-		fmt.Println(err)
-	}
-	echo(w, res)
+	echo(w, futures)
 }
 //
 //func (rte *router)ordersByFirmId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -109,7 +105,10 @@ func echo(w http.ResponseWriter, entity interface{})  {
 func (rte *router) register()  {
 	
 	// For firm
-	rte.http.GET("/futures",rte.futures)
+	rte.http.GET("/futures",func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
+		futures := rte.q.Futures()
+		echo(w, futures)
+	})
 	rte.http.GET("/futures/:id", func(w http.ResponseWriter, h *http.Request, p httprouter.Params) {
 		id,_ := strconv.Atoi(p.ByName("id"))
 		limit,_ := strconv.Atoi(h.URL.Query().Get("limit"))
