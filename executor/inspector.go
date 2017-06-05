@@ -93,10 +93,10 @@ func (in *inspector) InspectFirmFuture()  {
 	for true {
 		in.firmFutures = map[int][]int{}
 		var entis []entities.FirmFuture
-		in.db.Query().Find(&entities)
+		in.db.Query().Find(&entis)
 		for i:=0; i< len(entis) ;i++  {
 
-			_, exist := in.commissionSetting[entis[i].FirmId]
+			_, exist := in.firmFutures[entis[i].FirmId]
 			if ! exist {
 				in.firmFutures[entis[i].FirmId] = []int{entis[i].FutureId}
 				continue

@@ -14,11 +14,20 @@ var receiver *Receiver
 func TestNewReceiver(t *testing.T) {
 	port,_ := strconv.ParseInt(os.Getenv("REDIS_PORT"),10,32)
 	db,_ := strconv.ParseInt(os.Getenv("REDIS_DB"),10,32)
+
+	mysqlPort,_ := strconv.ParseInt(os.Getenv("MYSQL_PORT"),10,32)
+
 	config := ReceiverConfig{
 		RedisHost: os.Getenv("REDIS_HOST"),
 		RedisPort: int(port),
 		RedisPwd: os.Getenv("REDIS_PASSWORD"),
 		RedisDB: int(db),
+
+		MysqlHost: os.Getenv("MYSQL_HOST"),
+		MysqlPort: int(mysqlPort),
+		MysqlPwd: os.Getenv("MYSQL_PASSWORD"),
+		MysqlDB: os.Getenv("MYSQL_DB"),
+		MysqlUser: os.Getenv("MYSQL_USER"),
 	}
 	fmt.Println(config)
 
