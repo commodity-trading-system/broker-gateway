@@ -170,7 +170,14 @@ func (book *orderBook) matchOneLevel(consignation *entities.Consignation, curren
 
 	book.lastPrice = currentLevel.Price
 
-	return consignation.OpenQuantity==0, currentLevel.Consignations[length-1].OpenQuantity > 0
+	curLevelFinish := false
+	if len(currentLevel.Consignations) == 0 {
+		curLevelFinish = true
+	} else {
+		curLevelFinish = currentLevel.Consignations[length-1].OpenQuantity > 0
+	}
+
+	return consignation.OpenQuantity==0, curLevelFinish
 }
 
 
